@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parallax 2.5D — Hero</title>
+  <meta name="description" content="Hero one-page avec effet de scroll parallax 2.5D (GSAP ScrollTrigger)." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============================================================
+       HERO : section pinnée (100vh) pendant ~150vh de scroll.
+       Empilement (z-index) :
+         sky          → z-index 1  (fond, derrière)
+         product-panel → z-index 2  (au milieu, masqué par la colline en bas)
+         mountain     → z-index 3  (premier plan, devant)
+         title        → z-index 4  (texte toujours lisible)
+       ============================================================ -->
+  <section class="hero" id="hero">
+    <div class="hero__stage">
+
+      <!-- CALQUE 1 : ciel (fond fixe / très lent) -->
+      <img class="layer layer--sky" src="assets/img/sky.png" alt="" aria-hidden="true" />
+
+      <!-- CALQUE 2 : panneau glass placeholder (le futur produit) -->
+      <div id="product-panel" class="product-panel" aria-hidden="true">
+        <span class="product-panel__label">Product</span>
+      </div>
+
+      <!-- CALQUE 3 : colline premier plan (PNG transparent qui masque le panneau) -->
+      <img class="layer layer--mountain" src="assets/img/mountain.png" alt="" aria-hidden="true" />
+
+      <!-- CALQUE 4 : titre du hero -->
+      <div class="hero__title">
+        <h1>Parallax&nbsp;2.5D</h1>
+        <p>Scrolle pour voir le produit émerger de derrière la colline.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SECTION SUIVANTE : prend le relais après le pinning.
+       ============================================================ -->
+  <section class="next-section">
+    <h2>Section suivante</h2>
+    <p>On est sorti du pinning : le scroll reprend normalement.</p>
+  </section>
+
+  <!-- GSAP 3 + ScrollTrigger via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

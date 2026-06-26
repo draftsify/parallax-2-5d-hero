@@ -1,0 +1,171 @@
+/* ============================================================
+   RESET / BASE
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #1d1d1f;
+  background: #cfe4f3; /* fallback proche du bas du ciel, évite tout flash blanc */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   HERO — section pinnée pendant l'animation
+   ============================================================ */
+.hero {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden; /* masque les calques qui débordent (panneau bas, colline qui sort) */
+}
+
+.hero__stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* Calques images : couvrent le hero, légèrement surdimensionnés pour éviter
+   tout bord visible quand ils se déplacent / scalent. */
+.layer {
+  position: absolute;
+  left: 50%;
+  width: 110%;            /* un peu plus large que le viewport */
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform; /* perf : on n'anime que transform/opacity */
+}
+
+/* --- CIEL (z-index 1, derrière) --- */
+.layer--sky {
+  top: -10%;
+  transform: translateX(-50%);
+  z-index: 1;
+  /* surdimensionné en hauteur pour couvrir pendant le translateY lent */
+  width: 120%;
+  min-height: 130%;
+  object-fit: cover;
+}
+
+/* --- COLLINE (z-index 3, premier plan) --- */
+.layer--mountain {
+  bottom: -2%;            /* ancrée en bas */
+  transform: translateX(-50%);
+  transform-origin: 50% 100%; /* scale "caméra qui avance" depuis le bas */
+  z-index: 3;
+  width: 120%;
+}
+
+/* ============================================================
+   PRODUCT PANEL — placeholder glass (z-index 2, au milieu)
+   ============================================================ */
+.product-panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: 320px;
+  max-width: 80vw;
+  aspect-ratio: 4 / 5;
+  /* point de départ : translaté vers le bas (caché derrière la colline) */
+  transform: translate(-50%, 100%);
+  opacity: 0;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  will-change: transform, opacity;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-panel__label {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ============================================================
+   TITRE DU HERO (z-index 4, toujours au-dessus)
+   ============================================================ */
+.hero__title {
+  position: absolute;
+  top: 12%;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  text-align: center;
+  padding: 0 24px;
+  pointer-events: none;
+}
+
+.hero__title h1 {
+  margin: 0 0 0.4rem;
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.25);
+}
+
+.hero__title p {
+  margin: 0;
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* ============================================================
+   SECTION SUIVANTE
+   ============================================================ */
+.next-section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 24px;
+  background: #0f1115;
+  color: #f5f5f7;
+}
+
+.next-section h2 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  margin: 0 0 0.5rem;
+}
+
+.next-section p {
+  margin: 0;
+  color: #9aa0a6;
+}
+
+/* ============================================================
+   prefers-reduced-motion : on fige la première frame.
+   (le JS ne crée aucune animation ; on assure ici l'état visuel
+   final/initial propre = panneau caché derrière la colline.)
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .product-panel {
+    /* on laisse le panneau caché : première frame, pas d'animation */
+    transform: translate(-50%, 100%);
+    opacity: 0;
+  }
+}
