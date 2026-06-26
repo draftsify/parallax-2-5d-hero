@@ -50,12 +50,12 @@ body {
 
 /* --- CIEL (z-index 1, derrière) --- */
 .layer--sky {
-  top: -10%;
+  top: -25%;             /* débordement vers le HAUT : couvre quand le ciel descend */
   transform: translateX(-50%);
   z-index: 1;
   /* surdimensionné en hauteur pour couvrir pendant le translateY lent */
   width: 120%;
-  min-height: 130%;
+  min-height: 155%;
   object-fit: cover;
 }
 

@@ -74,8 +74,9 @@ mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
     sky,
     { y: 0, scale: 1 },
     {
-      // déplacement vertical du ciel = -(SKY_SPEED × référence) en px
-      y: () => -(SKY_SPEED * PARALLAX_REF()),
+      // déplacement vertical du ciel = +(SKY_SPEED × référence) en px
+      // (positif = vers le BAS : on scrolle vers le bas → le ciel descend, lentement)
+      y: () => SKY_SPEED * PARALLAX_REF(),
       scale: SKY_SCALE,
       ease: "none",
     },
@@ -100,8 +101,9 @@ mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
     mountain,
     { y: 0, scale: 1 },
     {
-      // déplacement vertical de la colline = -(MOUNTAIN_SPEED × référence) en px
-      y: () => -(MOUNTAIN_SPEED * PARALLAX_REF()),
+      // déplacement vertical de la colline = +(MOUNTAIN_SPEED × référence) en px
+      // (positif = vers le BAS : on scrolle vers le bas → la colline descend, vite)
+      y: () => MOUNTAIN_SPEED * PARALLAX_REF(),
       scale: MOUNTAIN_SCALE,
       ease: "none",
     },
@@ -125,19 +127,19 @@ mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
     },
   });
 
-  // Ciel : très léger déplacement.
+  // Ciel : très léger déplacement vers le bas.
   tlMobile.fromTo(
     sky,
     { y: 0 },
-    { y: () => -(SKY_SPEED * 0.5 * PARALLAX_REF()), ease: "none" },
+    { y: () => SKY_SPEED * 0.5 * PARALLAX_REF(), ease: "none" },
     0
   );
 
-  // Colline : déplacement un peu plus marqué (sans scale fort, mobile = sobre).
+  // Colline : déplacement vers le bas un peu plus marqué (sans scale fort, mobile = sobre).
   tlMobile.fromTo(
     mountain,
     { y: 0 },
-    { y: () => -(MOUNTAIN_SPEED * 0.5 * PARALLAX_REF()), ease: "none" },
+    { y: () => MOUNTAIN_SPEED * 0.5 * PARALLAX_REF(), ease: "none" },
     0
   );
 
