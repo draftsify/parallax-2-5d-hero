@@ -1222,7 +1222,7 @@ dockTabs.forEach((tab) => {
         '<button type="button" class="w-link" data-cardcreate>New card +</button></div>'
       : '<button type="button" class="w-promo" data-getmember>' +
         '<span class="w-promo__ico">' + ICONS.card + "</span>" +
-        '<span class="w-promo__txt"><strong>Get Membership</strong><small>Mint one-time & classic cards · ' + fmtEUR(MEMBER_PRICE) + "/mo, no KYC</small></span>" +
+        '<span class="w-promo__txt"><strong>Get Membership</strong><small>One-time & classic cards · ' + fmtEUR(MEMBER_PRICE) + "/mo</small></span>" +
         '<span class="w-promo__arr">' + ARROW + "</span></button>";
 
     // Cartes émises.
@@ -1246,7 +1246,7 @@ dockTabs.forEach((tab) => {
         '<button type="button" class="w-addr w-addr--solo" data-copy="' + acct.address + '"><span>' + fmtAddr(acct.address) + "</span>" + COPY + "</button>" +
         balanceCard +
         '<div class="m-actions m-actions--row"><button type="button" class="m-cta btn btn--primary" data-deposit><span class="btn__label">Add funds</span></button>' +
-        '<button type="button" class="m-cta m-cta--ghost" data-wsend><span class="btn__label">Send</span></button></div>' +
+        '<button type="button" class="m-cta btn m-cta--ghost" data-wsend><span class="btn__label">Send</span></button></div>' +
         section("Membership") + memberBlock +
         cardsBlock +
         section("Activity") + txBlock +

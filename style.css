@@ -829,13 +829,18 @@ input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
 .w-empty { text-align: center; color: var(--ink-3); font-size: 13.5px; padding: 4px 0 14px; }
 
 /* actions en ligne (Add funds / Send) */
-.m-actions--row { flex-direction: row; }
-.m-actions--row .m-cta { flex: 1; }
+/* hauteur cohérente pour TOUS les CTA de modale (prime sur .btn/.m-cta) */
+.m-actions .m-cta { height: 50px; }
+.m-actions--row { flex-direction: row; gap: 10px; }
+/* dans une rangée, labels centrés sans le padding asymétrique du badge flèche */
+.m-actions--row .m-cta { flex: 1; padding: 0; justify-content: center; }
 .m-cta--ghost {
-  background: rgba(31, 51, 66, 0.06) !important;
-  color: var(--brand-deep) !important;
-  box-shadow: none !important;
+  background: rgba(31, 51, 66, 0.06);
+  color: var(--brand-deep);
+  border: 1px solid rgba(31, 51, 66, 0.1);
+  box-shadow: none;
 }
+.m-cta--ghost:hover { background: rgba(31, 51, 66, 0.1); }
 
 /* sélecteur de token pour dépôt / envoi */
 .dep-toks { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
