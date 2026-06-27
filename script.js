@@ -1490,17 +1490,22 @@ if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       }
     );
 
-    // Fondu : respiration d'opacité, sur un rythme différent → effet organique.
+    // Fondu : respiration d'opacité ample (la fleur s'estompe presque
+    // entièrement puis revient), sur un rythme différent du flottement →
+    // effet organique de fleurs qui apparaissent/disparaissent en douceur.
+    // L'opacité de base de chaque fleur reste portée par le wrapper .petal,
+    // donc ce fondu se multiplie avec elle.
+    const fadeFloor = 0.1 + (i % 3) * 0.07; // plancher varié : 0.10 / 0.17 / 0.24
     gsap.fromTo(
       inner,
       { autoAlpha: 1 },
       {
-        autoAlpha: 0.45,
-        duration: 3.5 + (i % 4) * 0.9,
+        autoAlpha: fadeFloor,
+        duration: 4 + (i % 4) * 1.1,
         ease: "sine.inOut",
         repeat: -1,
         yoyo: true,
-        delay: i * 0.6,
+        delay: i * 0.8,
       }
     );
   });
