@@ -1430,6 +1430,11 @@ input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
 @media (max-width: 480px) {
   .dock-tabs { flex-wrap: nowrap; gap: 3px; }
   .dock-tab { padding: 8px 10px; font-size: 12px; white-space: nowrap; }
+  /* Sur téléphone le dock occupe 90vw : les fleurs placées vers les bords
+     (pensées pour le dock centré du desktop) chevauchent alors son contenu.
+     On les repasse SOUS le dock (z-index 1) → elles restent visibles dans le
+     ciel et derrière le verre (joliment floutées), sans encombrer l'UI. */
+  .petals { z-index: 1; }
 }
 
 /* ============================================================
