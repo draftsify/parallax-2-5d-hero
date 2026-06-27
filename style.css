@@ -107,14 +107,16 @@ button, input, select, textarea, optgroup {
   }
 }
 
-/* --- FLEURS FLOTTANTES (z-index 3, devant la colline, derrière le texte) ---
+/* --- FLEURS FLOTTANTES (z-index 2, DERRIÈRE la colline) ---
+   Placées sous mountain.png (z-index 3) : elles volent dans le ciel et la
+   colline les masque en bas → effet de fleurs qui s'élèvent derrière le relief.
    .petals : calque plein cadre, clippé, ne capte pas la souris.
    .petal  : wrapper positionné → reçoit la parallaxe au scroll (GSAP).
    .petal img : reçoit le flottement idle continu (GSAP) — transform séparé. */
 .petals {
   position: absolute;
   inset: 0;
-  z-index: 3;
+  z-index: 2;
   pointer-events: none;
   overflow: hidden;
 }
@@ -128,6 +130,8 @@ button, input, select, textarea, optgroup {
   display: block;
   width: 100%;
   will-change: transform, opacity; /* porte le flottement idle + le fondu */
+  /* flou de mouvement vertical : la fleur "vole" → traînée dans l'axe du bob */
+  filter: url(#flower-motion);
 }
 .petal img {
   display: block;
@@ -1418,6 +1422,14 @@ input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
   .nav__links { display: none; }
   .nav__actions .btn--ghost { display: none; }
   .nav__inner { padding-left: 18px; }
+}
+
+/* Téléphone : le dock rétrécit (90vw) → les 4 onglets doivent tenir sur UNE
+   ligne (sinon "Membership" passe seul à la ligne = pas propre). On resserre
+   padding/police et on interdit le retour à la ligne. */
+@media (max-width: 480px) {
+  .dock-tabs { flex-wrap: nowrap; gap: 3px; }
+  .dock-tab { padding: 8px 10px; font-size: 12px; white-space: nowrap; }
 }
 
 /* ============================================================

@@ -1165,8 +1165,7 @@ dockTabs.forEach((tab) => {
             '<button type="button" class="dep-tok' + (i === 0 ? " is-on" : "") + '" data-net="' + n + '">' + tokenLogo(n) + "<span>" + NETWORKS[n].name + "</span></button>"
           ).join("") + "</div></div>" +
         '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-modal-action="confirm"><span class="btn__label">Generate wallet</span><span class="btn__icon">' + ARROW + "</span></button></div>" +
-        privacyNote("Your keys are generated on your device") +
-        '<p class="m-altlink">Not ready to create a wallet? <a href="waitlist.html">Join the waitlist</a></p>',
+        privacyNote("Your keys are generated on your device"),
       () => {
         const hEl = document.getElementById("su-handle");
         const pEl = document.getElementById("su-pass");

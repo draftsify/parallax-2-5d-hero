@@ -12,10 +12,23 @@
 </head>
 <body>
 
+  <!-- Filtre SVG : flou de mouvement DIRECTIONNEL (vertical) appliqué aux
+       fleurs qui volent → la forme reste nette en largeur mais s'étire dans
+       l'axe du flottement, ce qui lit comme un vrai motion blur (et non un flou
+       d'optique). Région élargie pour ne pas rogner les bords étirés. -->
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+    <defs>
+      <filter id="flower-motion" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+        <feGaussianBlur stdDeviation="0.4 1.9" />
+      </filter>
+    </defs>
+  </svg>
+
   <!-- ============================================================
        HERO : section pinnée (100vh) pendant ~150vh de scroll.
        Empilement (z-index) :
          sky          → z-index 1  (fond, derrière)
+         fleurs       → z-index 2  (volent dans le ciel, MASQUÉES par la colline)
          product-panel → z-index 2  (au milieu, masqué par la colline en bas)
          mountain     → z-index 3  (premier plan, devant)
          title        → z-index 4  (texte toujours lisible)
@@ -33,7 +46,6 @@
       <nav class="nav__links">
         <a href="how-it-works.html">How it works</a>
         <a href="membership.html">Membership</a>
-        <a href="waitlist.html">Waitlist</a>
       </nav>
 
       <div class="nav__actions">
