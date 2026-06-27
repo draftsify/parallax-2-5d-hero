@@ -1312,19 +1312,15 @@ input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
   text-decoration: none;
 }
 
-/* logo blanc posé sur un badge bleu dégradé (sinon invisible sur verre clair) */
+/* logo seul, sans badge : le PNG blanc sert de pochoir (mask) rempli en bleu */
 .nav__logo {
-  width: 36px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 11px;
+  width: 34px;
+  height: 34px;
+  display: inline-block;
   background: linear-gradient(140deg, #4cb8f5 0%, var(--brand-deep) 100%);
-  box-shadow: 0 6px 14px -8px rgba(31, 120, 200, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  -webkit-mask: url(assets/img/logo_white.png) center / contain no-repeat;
+          mask: url(assets/img/logo_white.png) center / contain no-repeat;
 }
-.nav__logo img { width: 24px; height: 24px; display: block; object-fit: contain; }
-.nav__word { font-size: 20px; font-weight: 700; letter-spacing: -0.03em; }
 
 .nav__brand svg {
   height: 24px;
