@@ -241,12 +241,30 @@ mm.add("(prefers-reduced-motion: reduce)", () => {
 });
 
 /* ============================================================
+   Intro globale : toute la scène se révèle depuis un léger flou au
+   chargement (fondu + flou qui se résorbe + micro-zoom). clearProps
+   retire le filtre à la fin pour que le backdrop-filter du dock
+   (liquid glass) refonctionne normalement ensuite.
+   ============================================================ */
+if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  gsap.set(".hero__stage", { autoAlpha: 0, filter: "blur(24px)", scale: 1.035 });
+  gsap.to(".hero__stage", {
+    autoAlpha: 1,
+    filter: "blur(0px)",
+    scale: 1,
+    duration: 1.2,
+    ease: "power2.out",
+    clearProps: "filter,transform",
+  });
+}
+
+/* ============================================================
    Intro navbar : la barre glass glisse + apparaît au chargement
    (les enfants se posent en léger décalé). Désactivé si reduced-motion.
    ============================================================ */
 if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
-  intro.from(".nav__inner", { y: -22, opacity: 0, duration: 0.8, delay: 0.1 });
+  intro.from(".nav__inner", { y: -22, opacity: 0, filter: "blur(10px)", duration: 0.9, delay: 0.1, clearProps: "filter" });
   intro.from(
     ".nav__inner > *",
     { y: -8, opacity: 0, duration: 0.6, stagger: 0.07 },
