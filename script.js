@@ -514,6 +514,27 @@ dockTabs.forEach((tab) => {
     if (e.key === "Escape" && !modal.hidden) closeModal();
   });
   modalContent.addEventListener("click", (e) => {
+    // Segmented control : choix SEPA / carte one-time.
+    const seg = e.target.closest("[data-pay]");
+    if (seg) {
+      seg.parentElement.querySelectorAll("[data-pay]").forEach((o) => o.classList.remove("is-on"));
+      seg.classList.add("is-on");
+      const detail = modalContent.querySelector("#pay-detail span");
+      if (detail) detail.textContent = seg.dataset.detail;
+      return;
+    }
+    // Membership : génère une nouvelle carte à usage unique.
+    const nc = e.target.closest("[data-newcard]");
+    if (nc) {
+      const numEl = modalContent.querySelector(".m-card__num");
+      if (numEl) {
+        numEl.textContent = "•••• •••• •••• " + (1000 + Math.floor(Math.random() * 9000));
+        numEl.classList.remove("flash");
+        void numEl.offsetWidth;
+        numEl.classList.add("flash");
+      }
+      return;
+    }
     const btn = e.target.closest("[data-modal-action]");
     if (!btn) return;
     if (btn.dataset.modalAction === "cancel") closeModal();
@@ -533,18 +554,55 @@ dockTabs.forEach((tab) => {
     label + '</span><span class="btn__icon">' + ARROW + '</span></button>' +
     '<button type="button" class="m-ghost" data-modal-action="cancel">Cancel</button></div>';
   const privacyNote = (txt) => '<p class="m-note">' + LOCK + "<span>" + txt + "</span></p>";
-  const processing = (label) =>
+  const processing = (label, sub) =>
     '<div class="m-state"><div class="m-spin"></div><p class="m-title" style="font-size:18px">' +
-    label + '</p><p class="m-sub">Routing through the privacy layer…</p></div>';
+    label + '</p><p class="m-sub">' + (sub || "Routing through the privacy layer…") + "</p></div>";
   const successHead = (title, sub) =>
     '<div class="m-state"><div class="m-check">' + CHECK + '</div><h3 class="m-title" id="modal-title">' +
     title + '</h3><p class="m-sub">' + sub + "</p></div>";
   const doneBtn = (label) => '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-close><span class="btn__label">' + (label || "Done") + '</span></button></div>';
 
+  /* Sélecteur de moyen de paiement : SEPA ou carte à usage unique.
+     kind="pay" pour un achat, "payout" pour un encaissement (vente). */
+  function paySelector(kind) {
+    const c4 = 1000 + Math.floor(Math.random() * 9000); // n° de carte one-time fictif
+    const sepaTxt = kind === "payout"
+      ? "SEPA transfer — in your account in minutes"
+      : "SEPA transfer — settles instantly, no card needed";
+    const cardTxt = kind === "payout"
+      ? "Single-use card · •••• " + c4 + " · spend anywhere"
+      : "Single-use card · •••• " + c4 + " · burned after payment";
+    const label = kind === "payout" ? "Payout to" : "Pay with";
+    return (
+      '<div class="m-pay"><span class="m-pay__k">' + label + '</span>' +
+      '<div class="m-seg" role="radiogroup" aria-label="' + label + '">' +
+      '<button type="button" class="m-seg__opt is-on" data-pay="sepa" data-detail="' + sepaTxt + '">SEPA</button>' +
+      '<button type="button" class="m-seg__opt" data-pay="card" data-detail="' + cardTxt + '">One-time card</button>' +
+      '</div></div>' +
+      '<p class="m-pay__detail" id="pay-detail">' + LOCK + "<span>" + sepaTxt + "</span></p>"
+    );
+  }
+  // Renvoie le libellé du moyen choisi dans la modale courante.
+  function chosenPay() {
+    const on = modalContent.querySelector(".m-seg__opt.is-on");
+    return on && on.dataset.pay === "card" ? "One-time card" : "SEPA";
+  }
+
   // Lance traitement → succès après ~1.5 s
   function runFlow(processingLabel, buildSuccess) {
     setModal(processing(processingLabel));
     setTimeout(() => setModal(buildSuccess()), 1500);
+  }
+  // Enchaîne plusieurs étapes de traitement (ex. mix CEX → vente) puis le succès.
+  function runSteps(labels, buildSuccess) {
+    let i = 0;
+    setModal(processing(labels[0]));
+    const advance = () => {
+      i++;
+      if (i < labels.length) { setModal(processing(labels[i])); setTimeout(advance, 1200); }
+      else setTimeout(() => setModal(buildSuccess()), 300);
+    };
+    setTimeout(advance, 1200);
   }
 
   /* -------- Ouverture d'une transaction (buy / sell / send) -------- */
@@ -581,37 +639,48 @@ dockTabs.forEach((tab) => {
 
     if (action === "buy") {
       openModal(
-        head(ICONS.buy, "Review your purchase", "No KYC · settles instantly.") +
+        head(ICONS.buy, "Review your purchase", "No account, no KYC — pay and go.") +
           rows([
             ["You buy", fmtNum(amt) + " " + token],
             ["Rate", fmtRate(token).replace("≈ ", "")],
             ["You pay", fmtEUR(eur), true],
           ]) +
+          paySelector("pay") +
           confirmActions("Confirm & Buy") +
           privacyNote("End-to-end private — no identity check"),
-        () =>
+        () => {
+          const via = chosenPay();
           runFlow("Buying privately…", () =>
             successHead("Purchase complete", fmtNum(amt) + " " + token + " is now in your private balance.") +
-            rows([["Paid", fmtEUR(eur)], ["Reference", ref]]) +
+            rows([["Paid", fmtEUR(eur)], ["Via", via], ["Reference", ref]]) +
             doneBtn("Done")
-          )
+          );
+        }
       );
     } else if (action === "sell") {
       openModal(
-        head(ICONS.sell, "Review your sale", "No KYC · paid out by SEPA.") +
+        head(ICONS.sell, "Review your sale", "Mixed through a CEX, then sold — untraceable.") +
           rows([
             ["You sell", fmtNum(amt) + " " + token],
             ["Rate", fmtRate(token).replace("≈ ", "")],
             ["You receive", fmtEUR(eur), true],
           ]) +
+          paySelector("payout") +
           confirmActions("Confirm & Sell") +
-          privacyNote("End-to-end private — no identity check"),
-        () =>
-          runFlow("Selling privately…", () =>
-            successHead("Sale complete", fmtEUR(eur) + " is on its way to your account.") +
-            rows([["Sold", fmtNum(amt) + " " + token], ["Reference", ref]]) +
+          privacyNote("Routed through a mixer — no link to you"),
+        () => {
+          const via = chosenPay();
+          runSteps(["Mixing through a CEX…", "Selling privately…"], () =>
+            successHead(
+              "Sale complete",
+              via === "One-time card"
+                ? fmtEUR(eur) + " loaded onto your one-time card."
+                : fmtEUR(eur) + " is on its way by SEPA."
+            ) +
+            rows([["Sold", fmtNum(amt) + " " + token], ["Payout", via], ["Reference", ref]]) +
             doneBtn("Done")
-          )
+          );
+        }
       );
     } else if (action === "send") {
       const short = recipient.length > 22 ? recipient.slice(0, 10) + "…" + recipient.slice(-6) : recipient;
@@ -640,21 +709,22 @@ dockTabs.forEach((tab) => {
     const handle = "ghost-" + rndHex(4);
     const topupRow = amt > 0 ? [["Initial top-up", fmtEUR(amt)]] : [];
     openModal(
-      head(ICONS.card, "Become a member", "Anonymous card — no email, no KYC.") +
+      head(ICONS.card, "Become a member", "Mint one-time cards on demand — no email, no KYC.") +
         '<div class="m-field"><label>Your member handle</label><input class="m-input" value="@' + handle + '" readonly></div>' +
         '<div class="m-field"><label>Set a passphrase</label><input class="m-input" type="password" placeholder="••••••••" autocomplete="new-password"></div>' +
-        rows([["Card", "Virtual + Physical"], ...topupRow, ["Due today", fmtEUR(0), true]]) +
+        rows([["Cards", "Unlimited one-time"], ["Funding", "SEPA / crypto"], ...topupRow, ["Due today", fmtEUR(0), true]]) +
         confirmActions("Create membership") +
         privacyNote("Your identity is never collected"),
       () =>
         runFlow("Creating your membership…", () => {
           const num = "•••• •••• •••• " + (1000 + Math.floor(Math.random() * 9000));
           return (
-            successHead("Welcome aboard", "Your anonymous card is ready to use.") +
-            '<div class="m-card"><div class="m-card__top"><span>PRIVATE</span>' + LOCK + '</div>' +
+            successHead("Welcome aboard", "Mint a fresh single-use card whenever you spend.") +
+            '<div class="m-card"><div class="m-card__top"><span>ONE-TIME</span>' + LOCK + '</div>' +
             '<div class="m-card__num">' + num + '</div>' +
-            '<div class="m-card__bottom"><span>@' + handle + '</span><span>VIRTUAL</span></div></div>' +
-            doneBtn("Start spending")
+            '<div class="m-card__bottom"><span>@' + handle + '</span><span>SINGLE-USE</span></div></div>' +
+            '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-newcard><span class="btn__label">Create one-time card</span><span class="btn__icon">' + ARROW + '</span></button>' +
+            '<button type="button" class="m-ghost" data-close>Done</button></div>'
           );
         })
     );

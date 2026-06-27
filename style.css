@@ -549,6 +549,58 @@ input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
 }
 .m-note svg { width: 14px; height: 14px; flex-shrink: 0; }
 
+/* --- Sélecteur de moyen de paiement (SEPA / carte one-time) --- */
+.m-pay {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+.m-pay__k { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.m-seg {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(31, 51, 66, 0.07);
+}
+.m-seg__opt {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  background: transparent;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font: 600 13px/1 inherit;
+  letter-spacing: -0.01em;
+  color: var(--ink-3);
+  transition: color 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+.m-seg__opt:hover { color: var(--ink-2); }
+.m-seg__opt.is-on {
+  color: var(--brand-deep);
+  background: #fff;
+  box-shadow: 0 2px 8px -3px rgba(31, 51, 66, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.m-pay__detail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 2px 18px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+.m-pay__detail svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+/* flash quand on régénère une carte one-time */
+.m-card__num.flash { animation: cardFlash 0.5s ease; }
+@keyframes cardFlash {
+  from { opacity: 0.2; letter-spacing: 0.32em; }
+  to   { opacity: 1; letter-spacing: 0.14em; }
+}
+
 /* champ de formulaire (inscription / membre) */
 .m-field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; text-align: left; }
 .m-field label { font-size: 13px; font-weight: 600; color: var(--ink-2); }
@@ -625,7 +677,7 @@ input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
 .m-card__bottom { display: flex; justify-content: space-between; align-items: flex-end; font-size: 11.5px; font-weight: 600; opacity: 0.85; }
 
 @media (prefers-reduced-motion: reduce) {
-  .modal__card, .modal__scrim, .m-check, .m-check svg path, .token-menu { animation: none; }
+  .modal__card, .modal__scrim, .m-check, .m-check svg path, .token-menu, .m-card__num { animation: none; }
   .m-spin { animation-duration: 1.4s; }
 }
 
