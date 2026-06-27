@@ -33,7 +33,7 @@ const SKY_SCALE = 1.04;
 /* --- COLLINE (premier plan) --- */
 // Vitesse de descente de la colline (× la référence). ~0.32x : elle descend
 // juste assez pour révéler le dock centré, tout en restant TRÈS visible.
-const MOUNTAIN_SPEED = 0.32;
+const MOUNTAIN_SPEED = 0.45;
 // Scale final de la colline (léger, pour ne pas masquer le dock).
 const MOUNTAIN_SCALE = 1.05;
 
@@ -114,9 +114,13 @@ mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
   // Il est entièrement révélé bien avant la fin du pin.
   tl.fromTo(
     panel,
-    { yPercent: 100, opacity: 0 },
+    // x:0 / y:0 forcent GSAP à piloter le centrage en POURCENTAGE (xPercent/yPercent)
+    // et non en pixels — sinon le translate(-50%,100%) du CSS laisse un résidu
+    // qui bloque le dock trop bas.
+    { xPercent: -50, yPercent: 100, x: 0, y: 0, opacity: 0 },
     {
-      yPercent: -50, // centré dans le viewport (au-dessus des collines)
+      xPercent: -50,
+      yPercent: -50, // parfaitement centré dans le viewport
       opacity: 1,
       duration: DOCK_REVEAL,
       ease: "power2.out",
@@ -174,8 +178,8 @@ mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
   // Dock : remonte et se centre (comme sur desktop).
   tlMobile.fromTo(
     panel,
-    { yPercent: 100, opacity: 0 },
-    { yPercent: -50, opacity: 1, duration: DOCK_REVEAL, ease: "power2.out" },
+    { xPercent: -50, yPercent: 100, x: 0, y: 0, opacity: 0 },
+    { xPercent: -50, yPercent: -50, opacity: 1, duration: DOCK_REVEAL, ease: "power2.out" },
     0
   );
 
