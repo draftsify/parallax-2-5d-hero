@@ -86,6 +86,30 @@ body {
   width: 120%;
 }
 
+/* --- FLEURS FLOTTANTES (z-index 3, devant la colline, derrière le texte) ---
+   .petals : calque plein cadre, clippé, ne capte pas la souris.
+   .petal  : wrapper positionné → reçoit la parallaxe au scroll (GSAP).
+   .petal img : reçoit le flottement idle continu (GSAP) — transform séparé. */
+.petals {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
+}
+.petal {
+  position: absolute;
+  will-change: transform;
+}
+.petal img {
+  display: block;
+  width: 100%;
+  height: auto;
+  will-change: transform;
+  /* ombre douce pour ancrer la fleur dans la lumière de la scène */
+  filter: drop-shadow(0 6px 10px rgba(20, 45, 30, 0.14));
+}
+
 /* ============================================================
    DOCK LIQUID GLASS — recréation carte Umbra (z-index 2, au milieu)
    Style "Apple liquid glass" : verre dépoli, reflets, bordures claires.

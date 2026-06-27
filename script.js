@@ -55,6 +55,11 @@ const LEAD_REVEAL = 0.5;
 // Flou initial du texte explicatif (px), résorbé pendant l'apparition.
 const LEAD_BLUR = 12;
 
+/* --- FLEURS FLOTTANTES --- */
+// Amplitude de la dérive verticale au scroll (× la référence), divisée par la
+// "profondeur" data-depth de chaque fleur : les plus proches dérivent plus.
+const PETAL_DRIFT = 0.16;
+
 /* --- PANNEAU PRODUIT (glass, au milieu) --- */
 // Translation verticale du panneau : de +100% (caché en bas, derrière la
 // colline) à -20% (remonté au-dessus du centre).
@@ -171,6 +176,17 @@ mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
     { opacity: 1, y: 0, filter: "blur(0px)", duration: LEAD_REVEAL, ease: "power2.out" },
     LEAD_START
   );
+
+  // FLEURS : dérive verticale douce au scroll (parallaxe par profondeur).
+  gsap.utils.toArray(".petal").forEach((p) => {
+    const depth = parseFloat(p.dataset.depth) || 1;
+    tl.fromTo(
+      p,
+      { y: 0 },
+      { y: () => (PETAL_DRIFT * PARALLAX_REF()) / depth, ease: "none" },
+      0
+    );
+  });
 });
 
 /* ============================================================
@@ -229,6 +245,17 @@ mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
     { opacity: 1, y: 0, filter: "blur(0px)", duration: LEAD_REVEAL, ease: "power2.out" },
     LEAD_START
   );
+
+  // FLEURS : dérive plus discrète sur mobile.
+  gsap.utils.toArray(".petal").forEach((p) => {
+    const depth = parseFloat(p.dataset.depth) || 1;
+    tlMobile.fromTo(
+      p,
+      { y: 0 },
+      { y: () => (PETAL_DRIFT * 0.6 * PARALLAX_REF()) / depth, ease: "none" },
+      0
+    );
+  });
 });
 
 /* ============================================================
@@ -289,3 +316,33 @@ dockTabs.forEach((tab) => {
     );
   });
 });
+
+/* ============================================================
+   Flottement idle continu des fleurs : oscillation douce + légère
+   rotation, en boucle (yoyo). Appliqué à l'<img> intérieur → indépendant
+   de la parallaxe au scroll portée par le wrapper .petal. Les fleurs les
+   plus proches (data-depth faible) flottent d'une amplitude plus large.
+   Désactivé si l'utilisateur préfère réduire les animations.
+   ============================================================ */
+if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  gsap.utils.toArray(".petal").forEach((p, i) => {
+    const img = p.querySelector("img");
+    const depth = parseFloat(p.dataset.depth) || 1;
+    const amp = 8 + 12 / depth; // amplitude verticale (px)
+    const rot = 5 / depth; // rotation (deg)
+    gsap.fromTo(
+      img,
+      { y: -amp / 2, x: -amp * 0.3, rotation: -rot },
+      {
+        y: amp / 2,
+        x: amp * 0.3,
+        rotation: rot,
+        duration: 4 + (i % 5) * 0.7,
+        ease: "sine.inOut",
+        repeat: -1,
+        yoyo: true,
+        delay: i * 0.35,
+      }
+    );
+  });
+}
