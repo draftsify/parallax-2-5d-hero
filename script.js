@@ -52,6 +52,8 @@ const TITLE_BLUR = 10;
 // Démarre juste après l'effacement du titre → relais propre, sans chevauchement.
 const LEAD_START = 0.44;
 const LEAD_REVEAL = 0.5;
+// Flou initial du texte explicatif (px), résorbé pendant l'apparition.
+const LEAD_BLUR = 12;
 
 /* --- PANNEAU PRODUIT (glass, au milieu) --- */
 // Translation verticale du panneau : de +100% (caché en bas, derrière la
@@ -162,11 +164,11 @@ mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
   );
 
   // TEXTE EXPLICATIF : prend le relais du titre, apparaît au-dessus du dock
-  // (léger fondu + montée douce ; il reste ensuite parfaitement immobile).
+  // (fondu + montée douce + flou qui se résorbe, comme le dock).
   tl.fromTo(
     ".hero__lead",
-    { opacity: 0, y: 18 },
-    { opacity: 1, y: 0, duration: LEAD_REVEAL, ease: "power2.out" },
+    { opacity: 0, y: 18, filter: "blur(" + LEAD_BLUR + "px)" },
+    { opacity: 1, y: 0, filter: "blur(0px)", duration: LEAD_REVEAL, ease: "power2.out" },
     LEAD_START
   );
 });
@@ -220,11 +222,11 @@ mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
     0
   );
 
-  // Texte explicatif : prend le relais du titre au-dessus du dock.
+  // Texte explicatif : prend le relais du titre au-dessus du dock (avec flou).
   tlMobile.fromTo(
     ".hero__lead",
-    { opacity: 0, y: 18 },
-    { opacity: 1, y: 0, duration: LEAD_REVEAL, ease: "power2.out" },
+    { opacity: 0, y: 18, filter: "blur(" + LEAD_BLUR + "px)" },
+    { opacity: 1, y: 0, filter: "blur(0px)", duration: LEAD_REVEAL, ease: "power2.out" },
     LEAD_START
   );
 });

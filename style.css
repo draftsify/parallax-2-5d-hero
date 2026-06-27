@@ -179,6 +179,12 @@ body {
 
 .dock-tab:hover {
   color: var(--ink);
+  background: rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.dock-tab.is-active:hover {
+  color: var(--brand-deep);
 }
 
 .dock-tab.is-active {
@@ -235,17 +241,23 @@ body {
   color: var(--ink-2);
   font: 600 14px/1 inherit;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
-  transition: background-color 0.2s;
+  transition: background-color 0.25s, box-shadow 0.25s;
 }
 
 .token-select:hover {
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 4px 14px -8px rgba(31, 51, 66, 0.35);
 }
 
 .token-select svg {
   width: 14px;
   height: 14px;
   opacity: 0.7;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.token-select:hover svg {
+  transform: translateY(1px); /* micro-clin d'œil sur le chevron */
 }
 
 .dock-card__meta {
@@ -301,12 +313,37 @@ body {
 
 .dock-panel.is-active {
   display: flex;
-  animation: dockPanelIn 0.26s ease both; /* fondu doux, sans mouvement */
 }
 
-@keyframes dockPanelIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+/* Belle animation au changement d'onglet : les éléments du panneau
+   (carte → ligne secondaire → CTA) entrent en cascade, en fondu + montée
+   douce + flou qui se résorbe. Le translate reste interne au panneau →
+   la boîte du dock garde EXACTEMENT la même taille (aucun saut). */
+.dock-panel.is-active > * {
+  animation: dockItemIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.dock-panel.is-active > *:nth-child(1) { animation-delay: 0.02s; }
+.dock-panel.is-active > *:nth-child(2) { animation-delay: 0.09s; }
+.dock-panel.is-active > *:nth-child(3) { animation-delay: 0.16s; }
+
+@keyframes dockItemIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); filter: blur(7px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+/* Le gros chiffre "0" se pose avec un léger délai pour un effet premium */
+.dock-panel.is-active .dock-card__amount {
+  animation: dockAmountIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.14s;
+}
+@keyframes dockAmountIn {
+  from { opacity: 0; transform: translateY(6px); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dock-panel.is-active > *,
+  .dock-panel.is-active .dock-card__amount { animation: none; }
 }
 
 /* --- CTA pleine largeur (hérite du look .btn--primary) --- */
@@ -364,7 +401,7 @@ body {
   padding: 0 24px;
   opacity: 0; /* caché au départ, révélé pendant le scroll */
   pointer-events: none;
-  will-change: opacity, transform;
+  will-change: opacity, transform, filter;
 }
 
 .hero__lead h2 {
@@ -490,6 +527,9 @@ body {
    ============================================================ */
 .btn {
   --r: 999px;
+  position: relative;
+  isolation: isolate;       /* contexte d'empilement propre pour le sheen */
+  overflow: hidden;         /* le reflet (sheen) reste clippé dans le bouton */
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -502,7 +542,26 @@ body {
   text-decoration: none;
   cursor: pointer;
   white-space: nowrap;
-  transition: box-shadow 0.3s, background-color 0.25s, filter 0.3s;
+  transition: box-shadow 0.35s, background-color 0.25s, filter 0.3s;
+}
+
+/* Reflet "sheen" qui balaie le bouton primaire au survol (sans le déplacer) */
+.btn--primary::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  z-index: -1;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.5) 50%, transparent 100%);
+  transform: skewX(-18deg);
+  pointer-events: none;
+  transition: left 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.btn--primary:hover::after {
+  left: 135%;
 }
 
 /* --- Ghost glass (Get the app) --- */
@@ -541,8 +600,10 @@ body {
   z-index: 1;
 }
 
-/* badge rond blanc avec flèche (slide au hover) */
+/* badge rond blanc avec flèche */
 .btn__icon {
+  position: relative;
+  z-index: 1;               /* au-dessus du reflet sheen */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -552,7 +613,12 @@ body {
   background: rgba(255, 255, 255, 0.95);
   color: var(--brand-deep);
   flex-shrink: 0;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.btn--primary:hover .btn__icon {
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(10, 60, 120, 0.25);
 }
 
 .btn__icon svg {
@@ -560,11 +626,23 @@ body {
   height: 14px;
 }
 
-.btn--primary:hover .btn__icon {
-  background: #fff;
-}
-
 /* le CTA du dock (pleine largeur) : police un peu plus grande */
 .dock-cta .btn__label {
   font-size: 16px;
+}
+
+/* ============================================================
+   GRAIN — film de bruit subtil (opacité 0.1) sur TOUTE la page.
+   Overlay fixe, non-cliquable (pointer-events:none), au-dessus de tout.
+   Bruit fractal SVG désaturé → grain neutre, léger, premium.
+   ============================================================ */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
 }
