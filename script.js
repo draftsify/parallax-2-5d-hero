@@ -433,8 +433,20 @@ dockTabs.forEach((tab) => {
     const feeEl = panel.querySelector(".dock-fee__val");
     if (feeEl && (action === "buy" || action === "sell")) feeEl.textContent = fmtEUR(amt * rate);
 
+    // Solde : affiché UNIQUEMENT si l'utilisateur est connecté ET a déposé ce
+    // token (vrai solde du wallet). Sinon on masque tout le bloc "Balance · Max".
     const balEl = panel.querySelector(".dock-card__bal");
-    if (balEl && BALANCES[token] != null) balEl.textContent = fmtNum(BALANCES[token]);
+    if (balEl) {
+      const rightEl = panel.querySelector(".dock-card__meta .right");
+      const acct = loadAcct();
+      const bal = acct && acct.balances ? acct.balances[token] || 0 : 0;
+      if (bal > 0) {
+        balEl.textContent = fmtNum(bal);
+        if (rightEl) rightEl.style.display = "";
+      } else if (rightEl) {
+        rightEl.style.display = "none";
+      }
+    }
   }
 
   /* -------- Saisie du montant -------- */
@@ -451,8 +463,9 @@ dockTabs.forEach((tab) => {
     btn.addEventListener("click", () => {
       const panel = btn.closest(".dock-panel");
       const token = panel.querySelector(".token-select").dataset.token;
-      const bal = BALANCES[token];
-      if (bal == null) return;
+      const acct = loadAcct();
+      const bal = acct && acct.balances ? acct.balances[token] || 0 : 0;
+      if (!(bal > 0)) return;
       panel.querySelector(".dock-card__amount").value = fmtNum(bal);
       refreshPanel(panel);
     });
@@ -1098,6 +1111,8 @@ dockTabs.forEach((tab) => {
     const signup = document.querySelector('[data-auth="signup"] .btn__label');
     if (signup) signup.textContent = acct ? "@" + acct.handle : "Sign up";
     refreshMembershipUI();
+    // le solde affiché dans le dock (Sell/Send) dépend du wallet → resync
+    document.querySelectorAll(".dock-panel").forEach(refreshPanel);
   }
 
   /* Le 4e onglet du dock s'adapte au statut de membre : un non-membre ne voit
@@ -1236,23 +1251,29 @@ dockTabs.forEach((tab) => {
     if (!acct) { openSignup(); return; }
 
     const toks = Object.keys(acct.balances).filter((t) => acct.balances[t] > 0);
-    // Carte de solde unifiée : total en haut, détail par token sous un séparateur.
-    const balanceCard =
-      '<div class="w-balance"><div class="w-balance__total"><span>Total balance</span><strong>' + fmtEUR(totalValue(acct)) + "</strong></div>" +
-      (toks.length
-        ? '<div class="w-balance__list">' + toks.map((t) =>
-            '<div class="w-tok"><span class="w-tok__id">' + tokenLogo(t) + "<span>" + t + "</span></span>" +
-            '<span class="w-tok__val"><strong>' + fmtNum(acct.balances[t]) + "</strong><small>" + fmtEUR(acct.balances[t] * (RATES[t] || 0)) + "</small></span></div>"
-          ).join("") + "</div>"
-        : '<p class="w-empty">No funds yet — add some to get started.</p>') +
-      "</div>";
+    const hasFunds = toks.length > 0;
+    // Le solde n'est affiché QUE si l'utilisateur a déposé. Sinon, état vide.
+    const balanceCard = hasFunds
+      ? '<div class="w-balance"><div class="w-balance__total"><span>Total balance</span><strong>' + fmtEUR(totalValue(acct)) + "</strong></div>" +
+        '<div class="w-balance__list">' + toks.map((t) =>
+          '<div class="w-tok"><span class="w-tok__id">' + tokenLogo(t) + "<span>" + t + "</span></span>" +
+          '<span class="w-tok__val"><strong>' + fmtNum(acct.balances[t]) + "</strong><small>" + fmtEUR(acct.balances[t] * (RATES[t] || 0)) + "</small></span></div>"
+        ).join("") + "</div></div>"
+      : '<div class="w-noFunds"><span class="w-noFunds__ico">' + ICONS.deposit + "</span>" +
+        "<strong>No funds yet</strong><span>Add funds to see your balance here.</span></div>";
     const dashSub = (acct.network && NETWORKS[acct.network] ? netName(acct.network) + " · " : "") + "Self-custody" + (acct.member ? " · Member" : "");
-    // Sélecteur de devise d'affichage.
-    const ccyCtrl =
-      '<div class="w-ccy"><span class="w-ccy__k">Display currency</span><div class="w-ccy__seg">' +
-      Object.keys(CCY).map((c) =>
-        '<button type="button" class="w-ccy__opt' + (c === dispCcy ? " is-on" : "") + '" data-ccy="' + c + '">' + CCY[c].sym + " " + c + "</button>"
-      ).join("") + "</div></div>";
+    // Sélecteur de devise d'affichage — seulement s'il y a une balance à afficher.
+    const ccyCtrl = hasFunds
+      ? '<div class="w-ccy"><span class="w-ccy__k">Display currency</span><div class="w-ccy__seg">' +
+        Object.keys(CCY).map((c) =>
+          '<button type="button" class="w-ccy__opt' + (c === dispCcy ? " is-on" : "") + '" data-ccy="' + c + '">' + CCY[c].sym + " " + c + "</button>"
+        ).join("") + "</div></div>"
+      : "";
+    // Actions : Add funds toujours ; Send seulement si des fonds existent.
+    const actions = hasFunds
+      ? '<div class="m-actions m-actions--row"><button type="button" class="m-cta btn btn--primary" data-deposit><span class="btn__label">Add funds</span></button>' +
+        '<button type="button" class="m-cta btn m-cta--ghost" data-wsend><span class="btn__label">Send</span></button></div>'
+      : '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-deposit><span class="btn__label">Add funds</span><span class="btn__icon">' + ARROW + "</span></button></div>";
 
     // Bloc membership : promo si non-membre, statut + bouton sinon.
     const memberBlock = acct.member
@@ -1284,8 +1305,7 @@ dockTabs.forEach((tab) => {
         '<button type="button" class="w-addr w-addr--solo" data-copy="' + acct.address + '"><span>' + fmtAddr(acct.address) + "</span>" + COPY + "</button>" +
         balanceCard +
         ccyCtrl +
-        '<div class="m-actions m-actions--row"><button type="button" class="m-cta btn btn--primary" data-deposit><span class="btn__label">Add funds</span></button>' +
-        '<button type="button" class="m-cta btn m-cta--ghost" data-wsend><span class="btn__label">Send</span></button></div>' +
+        actions +
         section("Membership") + memberBlock +
         cardsBlock +
         section("Activity") + txBlock +

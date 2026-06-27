@@ -828,6 +828,23 @@ input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
 .w-tok__val small { font-size: 12px; font-weight: 500; color: var(--ink-3); }
 .w-empty { text-align: center; color: var(--ink-3); font-size: 13.5px; padding: 4px 0 14px; }
 
+/* état vide : aucun fonds déposé → on n'affiche pas de balance */
+.w-noFunds {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: 4px; padding: 22px 16px; margin-bottom: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.34);
+  border: 1px dashed rgba(31, 51, 66, 0.16);
+}
+.w-noFunds__ico {
+  width: 42px; height: 42px; margin-bottom: 4px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 12px; background: rgba(31, 51, 66, 0.06); color: var(--ink-2);
+}
+.w-noFunds__ico svg { width: 22px; height: 22px; }
+.w-noFunds strong { font-size: 15px; font-weight: 700; color: var(--ink); }
+.w-noFunds > span:last-child { font-size: 12.5px; color: var(--ink-3); }
+
 /* sélecteur de devise d'affichage */
 .w-ccy { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
 .w-ccy__k { font-size: 13px; font-weight: 600; color: var(--ink-2); }
