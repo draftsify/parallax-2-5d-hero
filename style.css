@@ -828,6 +828,20 @@ input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
 .w-tok__val small { font-size: 12px; font-weight: 500; color: var(--ink-3); }
 .w-empty { text-align: center; color: var(--ink-3); font-size: 13.5px; padding: 4px 0 14px; }
 
+/* sélecteur de devise d'affichage */
+.w-ccy { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.w-ccy__k { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.w-ccy__seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(31, 51, 66, 0.06); }
+.w-ccy__opt {
+  appearance: none; border: 0; cursor: pointer;
+  padding: 6px 12px; border-radius: 999px;
+  background: transparent; color: var(--ink-2);
+  font: 600 12.5px/1 inherit;
+  transition: background-color 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.w-ccy__opt:hover { color: var(--ink); }
+.w-ccy__opt.is-on { background: #fff; color: var(--brand-deep); box-shadow: 0 1px 3px rgba(20, 40, 55, 0.12); }
+
 /* actions en ligne (Add funds / Send) */
 /* hauteur cohérente pour TOUS les CTA de modale (prime sur .btn/.m-cta) */
 .m-actions .m-cta { height: 50px; }

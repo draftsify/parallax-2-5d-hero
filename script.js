@@ -354,13 +354,34 @@ dockTabs.forEach((tab) => {
   // Jeux de tokens proposés selon le type de panneau.
   const TOKEN_SETS = { crypto: ["USDC", "USDT", "ETH", "BTC", "SOL"], fiat: ["EUR", "USD", "GBP"] };
 
+  // --- Devise d'affichage --------------------------------------------------
+  // Tout est compté en interne en EUR ; on convertit à l'affichage selon la
+  // devise choisie. `rate` = unités de cette devise pour 1 EUR (EUR→devise),
+  // rafraîchi avec les FX en direct (CoinGecko).
+  const CCY = {
+    EUR: { sym: "€", rate: 1 },
+    USD: { sym: "$", rate: 1.09 },
+    GBP: { sym: "£", rate: 0.86 },
+  };
+  const CKEY = "umbra.ccy";
+  let dispCcy = "EUR";
+  try { const s = localStorage.getItem(CKEY); if (s && CCY[s]) dispCcy = s; } catch (_) {}
+  const setCcy = (c) => { if (!CCY[c]) return; dispCcy = c; try { localStorage.setItem(CKEY, c); } catch (_) {} };
+
   // --- Formatage ---
-  const fmtEUR = (n) => "€" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // fmtEUR garde son nom (rétro-compat) mais affiche dans la devise choisie ;
+  // l'argument est toujours un montant EUR interne.
+  const fmtMoney = (eur) => {
+    const c = CCY[dispCcy] || CCY.EUR;
+    return c.sym + (eur * c.rate).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+  const fmtEUR = fmtMoney;
   const fmtNum = (n) => n.toLocaleString("en-US", { maximumFractionDigits: 6 });
   const fmtRate = (t) => {
-    const r = RATES[t] || 1;
+    const c = CCY[dispCcy] || CCY.EUR;
+    const r = (RATES[t] || 1) * c.rate;
     const d = r >= 100 ? 0 : 2;
-    return "≈ €" + r.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }) + " / " + t;
+    return "≈ " + c.sym + r.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }) + " / " + t;
   };
   const parseAmt = (el) => {
     const v = parseFloat((el && el.value ? el.value : "").replace(/,/g, "").trim());
@@ -587,6 +608,14 @@ dockTabs.forEach((tab) => {
       nt.classList.add("is-on");
       return;
     }
+    // Changement de devise d'affichage → persiste, re-rend le dashboard + le dock.
+    const cc = e.target.closest("[data-ccy]");
+    if (cc) {
+      setCcy(cc.dataset.ccy);
+      document.querySelectorAll(".dock-panel").forEach(refreshPanel);
+      openDashboard();
+      return;
+    }
     // Copie de l'adresse du wallet.
     const cp = e.target.closest("[data-copy]");
     if (cp) {
@@ -809,7 +838,9 @@ dockTabs.forEach((tab) => {
     }
   }
 
-  const MEMBER_PRICE = 9; // € / mois (démo)
+  const MEMBER_USD = 55; // $ / mois — ancré en USD, converti pour l'affichage
+  // Prix membership en EUR interne (round-trip exact vers $55 en USD).
+  const memberPriceEur = () => MEMBER_USD / (CCY.USD.rate || 1.09);
 
   /* -------- Gating des paiements --------
      SEPA → un compte (wallet) suffit. Carte one-time → membership payant. */
@@ -837,7 +868,7 @@ dockTabs.forEach((tab) => {
   }
   function gateNoMember() {
     openModal(
-      head(ICONS.card, "Membership required", "One-time cards are a member feature — " + fmtEUR(MEMBER_PRICE) + "/mo, no KYC.") +
+      head(ICONS.card, "Membership required", "One-time cards are a member feature — " + fmtMoney(memberPriceEur()) + "/mo, no KYC.") +
         '<p class="m-lead">Become a member to mint single-use cards. Your identity is never collected.</p>' +
         '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-getmember><span class="btn__label">Get membership</span><span class="btn__icon">' + ARROW + '</span></button>' +
         '<button type="button" class="m-ghost" data-close>Not now</button></div>',
@@ -851,25 +882,26 @@ dockTabs.forEach((tab) => {
     if (!acct) { gateNoAccount("card"); return; }
     if (acct.member) { openCardCreate(); return; }
     openModal(
-      head(ICONS.card, "Get Membership", "Mint unlimited one-time & classic cards — no KYC.") +
+      head(ICONS.card, "Get Membership", "Zero fees on every payment + unlimited cards. No KYC.") +
         rows([
           ["Plan", "Member · monthly"],
+          ["Fees", "Zero on every payment"],
           ["Cards", "One-time & classic"],
           ["Privacy", "No identity, ever"],
-          ["Due today", fmtEUR(MEMBER_PRICE), true],
+          ["Due today", fmtMoney(memberPriceEur()), true],
         ]) +
         '<div class="m-pay"><span class="m-pay__k">Pay with</span>' +
         '<div class="m-seg" role="radiogroup" aria-label="Pay with">' +
         '<button type="button" class="m-seg__opt is-on" data-mpay="sepa">SEPA</button>' +
         '<button type="button" class="m-seg__opt" data-mpay="wallet">From wallet</button>' +
         '</div></div>' +
-        confirmActions("Pay " + fmtEUR(MEMBER_PRICE)) +
+        confirmActions("Pay " + fmtMoney(memberPriceEur())) +
         privacyNote("Billed privately — your identity is never collected"),
       () => {
         const on = modalContent.querySelector(".m-seg__opt.is-on[data-mpay]");
         const via = on ? on.dataset.mpay : "sepa";
         const a0 = loadAcct();
-        if (via === "wallet" && totalValue(a0) < MEMBER_PRICE) {
+        if (via === "wallet" && totalValue(a0) < memberPriceEur()) {
           // Pas assez de fonds → on invite à recharger.
           openDeposit();
           return;
@@ -1094,7 +1126,7 @@ dockTabs.forEach((tab) => {
       card.innerHTML =
         '<span class="dock-card__label">Membership</span>' +
         '<div class="dock-card__pitch"><span class="dock-card__pitch-ico">' + CARD_SVG + "</span>" +
-        '<span class="dock-card__pitch-txt"><strong>' + fmtEUR(MEMBER_PRICE) + ' <small>/ month</small></strong><span>Unlock one-time & classic cards — no KYC</span></span></div>' +
+        '<span class="dock-card__pitch-txt"><strong>' + fmtMoney(memberPriceEur()) + ' <small>/ month</small></strong><span>Zero fees on payments · one-time & classic cards</span></span></div>' +
         '<div class="dock-card__meta"><span class="left">' + CARD_SVG + "<span>Members only</span></span>" +
         '<span class="right">Cancel anytime</span></div>';
       fee.innerHTML = "<span>Billing</span><span>Private<span class=\"dock-dot\"></span>No identity</span>";
@@ -1187,7 +1219,7 @@ dockTabs.forEach((tab) => {
     else if (tx.type === "buy") m = { ic: ICONS.buy, label: "Bought " + tk, amt: "+" + qty, cls: "pos" };
     else if (tx.type === "sell") m = { ic: ICONS.sell, label: "Sold " + tk, amt: "−" + qty, cls: "neg" };
     else if (tx.type === "card") m = { ic: ICONS.card, label: (tx.kind === "classic" ? "Classic" : "One-time") + " card created", amt: tx.last4 ? "•••• " + tx.last4 : "", cls: "" };
-    else if (tx.type === "membership") m = { ic: ICONS.card, label: "Membership activated", amt: fmtEUR(MEMBER_PRICE), cls: "" };
+    else if (tx.type === "membership") m = { ic: ICONS.card, label: "Membership activated", amt: fmtMoney(memberPriceEur()), cls: "" };
     else m = { ic: ICONS.wallet, label: tx.type, amt: "", cls: "" };
     const sub = timeAgo(tx.at) + (tx.to ? " · " + (tx.to.length > 16 ? tx.to.slice(0, 8) + "…" : tx.to) : "");
     return (
@@ -1215,6 +1247,12 @@ dockTabs.forEach((tab) => {
         : '<p class="w-empty">No funds yet — add some to get started.</p>') +
       "</div>";
     const dashSub = (acct.network && NETWORKS[acct.network] ? netName(acct.network) + " · " : "") + "Self-custody" + (acct.member ? " · Member" : "");
+    // Sélecteur de devise d'affichage.
+    const ccyCtrl =
+      '<div class="w-ccy"><span class="w-ccy__k">Display currency</span><div class="w-ccy__seg">' +
+      Object.keys(CCY).map((c) =>
+        '<button type="button" class="w-ccy__opt' + (c === dispCcy ? " is-on" : "") + '" data-ccy="' + c + '">' + CCY[c].sym + " " + c + "</button>"
+      ).join("") + "</div></div>";
 
     // Bloc membership : promo si non-membre, statut + bouton sinon.
     const memberBlock = acct.member
@@ -1222,7 +1260,7 @@ dockTabs.forEach((tab) => {
         '<button type="button" class="w-link" data-cardcreate>New card +</button></div>'
       : '<button type="button" class="w-promo" data-getmember>' +
         '<span class="w-promo__ico">' + ICONS.card + "</span>" +
-        '<span class="w-promo__txt"><strong>Get Membership</strong><small>One-time & classic cards · ' + fmtEUR(MEMBER_PRICE) + "/mo</small></span>" +
+        '<span class="w-promo__txt"><strong>Get Membership</strong><small>Zero fees · one-time & classic cards · ' + fmtMoney(memberPriceEur()) + "/mo</small></span>" +
         '<span class="w-promo__arr">' + ARROW + "</span></button>";
 
     // Cartes émises.
@@ -1245,6 +1283,7 @@ dockTabs.forEach((tab) => {
       head(ICONS.wallet, "@" + acct.handle, dashSub) +
         '<button type="button" class="w-addr w-addr--solo" data-copy="' + acct.address + '"><span>' + fmtAddr(acct.address) + "</span>" + COPY + "</button>" +
         balanceCard +
+        ccyCtrl +
         '<div class="m-actions m-actions--row"><button type="button" class="m-cta btn btn--primary" data-deposit><span class="btn__label">Add funds</span></button>' +
         '<button type="button" class="m-cta btn m-cta--ghost" data-wsend><span class="btn__label">Send</span></button></div>' +
         section("Membership") + memberBlock +
@@ -1371,7 +1410,7 @@ dockTabs.forEach((tab) => {
      taux de secours — l'UI reste fonctionnelle. */
   (function fetchLivePrices() {
     const map = { bitcoin: "BTC", ethereum: "ETH", solana: "SOL", "usd-coin": "USDC", tether: "USDT" };
-    const url = "https://api.coingecko.com/api/v3/simple/price?ids=" + Object.keys(map).join(",") + "&vs_currencies=eur";
+    const url = "https://api.coingecko.com/api/v3/simple/price?ids=" + Object.keys(map).join(",") + "&vs_currencies=eur,usd,gbp";
     fetch(url)
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((d) => {
@@ -1380,10 +1419,18 @@ dockTabs.forEach((tab) => {
           const v = d && d[id] && d[id].eur;
           if (typeof v === "number" && v > 0) { RATES[map[id]] = v; any = true; }
         }
-        if (any) {
+        // FX réels EUR→USD / EUR→GBP dérivés d'un stablecoin (USDC).
+        const ref = d && d["usd-coin"];
+        if (ref && ref.eur > 0) {
+          if (ref.usd > 0) CCY.USD.rate = ref.usd / ref.eur;
+          if (ref.gbp > 0) CCY.GBP.rate = ref.gbp / ref.eur;
+          RATES.USD = 1 / CCY.USD.rate; // EUR par USD (cohérence taux fiat)
+          RATES.GBP = 1 / CCY.GBP.rate;
+        }
+        if (any || ref) {
           document.querySelectorAll(".dock-panel").forEach(refreshPanel);
           // Si le dashboard est ouvert, on le rafraîchit pour répercuter les valeurs.
-          if (!modal.hidden && modalContent.querySelector(".w-total")) {
+          if (!modal.hidden && modalContent.querySelector(".w-balance")) {
             const a = loadAcct();
             if (a) openDashboard();
           }
