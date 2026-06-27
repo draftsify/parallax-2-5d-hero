@@ -23,18 +23,63 @@
       <!-- CALQUE 1 : ciel (fond fixe / très lent) -->
       <img class="layer layer--sky" src="assets/img/sky.png" alt="" aria-hidden="true" />
 
-      <!-- CALQUE 2 : panneau glass placeholder (le futur produit) -->
-      <div id="product-panel" class="product-panel" aria-hidden="true">
-        <span class="product-panel__label">Product</span>
+      <!-- CALQUE 2 : DOCK liquid-glass (recréation de la carte Umbra) -->
+      <!-- garde l'id #product-panel : c'est lui qui émerge de derrière la colline -->
+      <div id="product-panel" class="glass-dock" role="group" aria-label="Umbra">
+
+        <!-- Onglets -->
+        <div class="dock-tabs">
+          <button type="button" class="dock-tab is-active">Shield</button>
+          <button type="button" class="dock-tab">Private Swap</button>
+          <button type="button" class="dock-tab">Private Send</button>
+          <button type="button" class="dock-tab">Withdraw</button>
+          <button type="button" class="dock-tab">Bridge</button>
+        </div>
+
+        <!-- Carte "You're Shielding" -->
+        <div class="dock-card">
+          <span class="dock-card__label">You're Shielding</span>
+          <div class="dock-card__amount-row">
+            <span class="dock-card__amount">0</span>
+            <button type="button" class="token-select">
+              Select Token
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M8 10l4 4 4-4" stroke="currentColor" stroke-width="1.8"
+                      stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </div>
+          <div class="dock-card__meta">
+            <span class="left">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M15 19V6.66c0-1 0-1.51.31-1.63.31-.13.67.23 1.4.94L19 8.21"
+                      stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M9 5v12.34c0 1.01 0 1.51-.31 1.64-.31.12-.67-.24-1.4-.95L5 15.79"
+                      stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              0.00
+            </span>
+            <span class="right">Balance: 24,983.21<span class="dock-dot"></span>Max</span>
+          </div>
+        </div>
+
+        <!-- Frais -->
+        <div class="dock-fee">
+          <span>Shielding Fee</span>
+          <span>No Fee<span class="dock-dot"></span>$0.00</span>
+        </div>
+
+        <!-- CTA -->
+        <button type="button" class="dock-cta">Get Started</button>
       </div>
 
-      <!-- CALQUE 3 : colline premier plan (PNG transparent qui masque le panneau) -->
+      <!-- CALQUE 3 : colline premier plan (PNG transparent qui masque le dock) -->
       <img class="layer layer--mountain" src="assets/img/mountain.png" alt="" aria-hidden="true" />
 
-      <!-- CALQUE 4 : titre du hero -->
+      <!-- CALQUE 4 : titre du hero (façon Umbra) -->
       <div class="hero__title">
-        <h1>Parallax&nbsp;2.5D</h1>
-        <p>Scrolle pour voir le produit émerger de derrière la colline.</p>
+        <h1>Incognito mode<br>for your money.</h1>
+        <p>Umbra is the privacy layer for money. Shield assets with zero fees.</p>
       </div>
 
     </div>

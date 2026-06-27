@@ -83,13 +83,14 @@ mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
     0 // démarre à t=0 sur la timeline
   );
 
-  // PANNEAU : remonte de PANEL_FROM_Y à PANEL_TO_Y + fade-in.
+  // DOCK : remonte de bas (caché derrière la colline) jusqu'au centre + fade-in.
   tl.fromTo(
     panel,
     { yPercent: 100, opacity: 0 },
     {
-      // translateY de bas en haut (les % sont relatifs à la hauteur du panneau)
-      yPercent: -20,
+      // translateY de bas en haut (les % sont relatifs à la hauteur du dock)
+      // -50% => parfaitement centré dans le viewport en fin d'animation
+      yPercent: -50,
       opacity: 1,
       ease: "none",
     },
@@ -159,4 +160,15 @@ mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
    ============================================================ */
 mm.add("(prefers-reduced-motion: reduce)", () => {
   // Volontairement vide : la première frame est rendue par le CSS.
+});
+
+/* ============================================================
+   Interactivité du dock : bascule l'onglet actif au clic.
+   ============================================================ */
+const dockTabs = document.querySelectorAll(".dock-tab");
+dockTabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    dockTabs.forEach((t) => t.classList.remove("is-active"));
+    tab.classList.add("is-active");
+  });
 });
