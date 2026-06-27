@@ -400,7 +400,9 @@ dockTabs.forEach((tab) => {
   function refreshPanel(panel) {
     if (!panel) return;
     const action = panel.dataset.panel;
-    const token = panel.querySelector(".token-select").dataset.token;
+    const tokSel = panel.querySelector(".token-select");
+    if (!tokSel) return; // panneau membership : pas de token (rendu par refreshMembershipUI)
+    const token = tokSel.dataset.token;
     const amt = parseAmt(panel.querySelector(".dock-card__amount"));
     const rate = RATES[token] || 1;
 
@@ -1042,6 +1044,41 @@ dockTabs.forEach((tab) => {
     const acct = vault.load();
     const signup = document.querySelector('[data-auth="signup"] .btn__label');
     if (signup) signup.textContent = acct ? "@" + acct.handle : "Sign up";
+    refreshMembershipUI();
+  }
+
+  /* Le 4e onglet du dock s'adapte au statut de membre : un non-membre ne voit
+     PAS une création de carte (il ne peut pas en avoir), seulement l'offre
+     membership ; un membre voit la création de carte. */
+  const CARD_SVG = '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 10h18" stroke="currentColor" stroke-width="1.5"/></svg>';
+  function refreshMembershipUI() {
+    const panel = document.querySelector('.dock-panel[data-panel="card"]');
+    if (!panel) return;
+    const card = panel.querySelector(".dock-card");
+    const fee = panel.querySelector(".dock-fee");
+    const ctaLabel = panel.querySelector(".dock-cta .btn__label");
+    if (!card || !fee || !ctaLabel) return;
+    const acct = loadAcct();
+    const member = !!(acct && acct.member);
+    if (member) {
+      card.innerHTML =
+        '<span class="dock-card__label">One-Time Card</span>' +
+        '<div class="dock-card__pitch"><span class="dock-card__pitch-ico">' + CARD_SVG + "</span>" +
+        '<span class="dock-card__pitch-txt"><strong>Mint a card</strong><span>One-time or classic — generated on your device</span></span></div>' +
+        '<div class="dock-card__meta"><span class="left">' + CARD_SVG + "<span>Active membership</span></span>" +
+        '<span class="right">Single-use<span class="dock-dot"></span>Burned after</span></div>';
+      fee.innerHTML = "<span>Membership</span><span>Active<span class=\"dock-dot\"></span>Unlimited cards</span>";
+      ctaLabel.textContent = "Create a card";
+    } else {
+      card.innerHTML =
+        '<span class="dock-card__label">Membership</span>' +
+        '<div class="dock-card__pitch"><span class="dock-card__pitch-ico">' + CARD_SVG + "</span>" +
+        '<span class="dock-card__pitch-txt"><strong>' + fmtEUR(MEMBER_PRICE) + ' <small>/ month</small></strong><span>Unlock one-time & classic cards — no KYC</span></span></div>' +
+        '<div class="dock-card__meta"><span class="left">' + CARD_SVG + "<span>Members only</span></span>" +
+        '<span class="right">Cancel anytime</span></div>';
+      fee.innerHTML = "<span>Billing</span><span>Private<span class=\"dock-dot\"></span>No identity</span>";
+      ctaLabel.textContent = "Become a Member";
+    }
   }
 
   let pendingWallet = null; // wallet en cours de création (avant validation phrase)

@@ -317,6 +317,19 @@ input.dock-card__amount {
 }
 input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
 
+/* pitch du panneau membership / création de carte (4e onglet) */
+.dock-card__pitch { display: flex; align-items: center; gap: 13px; padding: 7px 0 5px; }
+.dock-card__pitch-ico {
+  width: 46px; height: 46px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 14px; color: var(--brand-deep);
+  background: linear-gradient(140deg, rgba(76, 184, 245, 0.22), rgba(10, 111, 224, 0.14));
+}
+.dock-card__pitch-ico svg { width: 24px; height: 24px; }
+.dock-card__pitch-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dock-card__pitch-txt strong { font-size: 23px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); line-height: 1; }
+.dock-card__pitch-txt strong small { font-size: 13px; font-weight: 600; color: var(--ink-3); letter-spacing: 0; }
+.dock-card__pitch-txt > span { font-size: 12.5px; font-weight: 500; color: var(--ink-2); line-height: 1.35; }
+
 /* léger feedback d'erreur (montant manquant) */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
