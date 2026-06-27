@@ -378,7 +378,23 @@ dockTabs.forEach((tab) => {
     send: '<svg viewBox="0 0 24 24" fill="none"><path d="M21 4L3 11l7 3 3 7 8-17z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     card: '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M3 10h18" stroke="currentColor" stroke-width="1.7"/></svg>',
     auth: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M5 20a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+    wallet: '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M3 10h18" stroke="currentColor" stroke-width="1.7"/><circle cx="17" cy="14.5" r="1.2" fill="currentColor"/></svg>',
+    deposit: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 4v11m0 0l-4-4m4 4l4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 19h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    key: '<svg viewBox="0 0 24 24" fill="none"><circle cx="8" cy="15" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M11 12l8-8m-3 0h3v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   };
+
+  /* Logos crypto / symboles fiat (cercles de marque, 18px). */
+  const TOKEN_ICONS = {
+    BTC: '<svg class="tok-logo" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#F7931A"/><path d="M21.6 14.3c.25-1.7-1-2.6-2.8-3.2l.57-2.3-1.4-.35-.56 2.24c-.37-.09-.75-.18-1.13-.26l.56-2.25-1.4-.35-.57 2.3-2.83-.7-.37 1.5s1.04.24 1.02.25c.57.14.67.52.65.82l-1.56 6.25c-.07.17-.24.43-.64.33.01.02-1.02-.25-1.02-.25l-.7 1.6 2.74.68-.58 2.34 1.4.35.57-2.3c.38.1.75.2 1.11.29l-.57 2.29 1.4.35.58-2.33c2.39.45 4.19.27 4.94-1.9.61-1.74-.03-2.75-1.29-3.4.92-.21 1.61-.82 1.79-2.06zm-3.2 4.5c-.43 1.74-3.36.8-4.31.56l.76-3.06c.95.24 4 .71 3.55 2.5zm.43-4.53c-.39 1.58-2.83.78-3.62.58l.69-2.77c.79.2 3.34.56 2.93 2.19z" fill="#fff"/></svg>',
+    ETH: '<svg class="tok-logo" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#627EEA"/><g fill="#fff"><path fill-opacity=".6" d="M16.1 5l-.18.6v13.06l.18.18 6.06-3.58z"/><path d="M16.1 5L10.05 15.26l6.06 3.58V5z"/><path fill-opacity=".6" d="M16.1 19.97l-.1.13v4.65l.1.3 6.07-8.55z"/><path d="M16.1 25.05v-5.08l-6.05-3.47z"/><path fill-opacity=".2" d="M16.1 18.84l6.06-3.58-6.06-2.76z"/><path fill-opacity=".6" d="M10.05 15.26l6.06 3.58v-6.34z"/></g></svg>',
+    SOL: '<svg class="tok-logo" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#0b0b0f"/><defs><linearGradient id="solg" x1="6" y1="22" x2="24" y2="10" gradientUnits="userSpaceOnUse"><stop stop-color="#9945FF"/><stop offset="1" stop-color="#14F195"/></linearGradient></defs><g fill="url(#solg)"><path d="M10.2 20.2c.11-.1.26-.16.41-.16h12.1c.26 0 .39.31.2.49l-2.3 2.3c-.1.1-.25.16-.4.16H8.1c-.26 0-.39-.31-.2-.49z"/><path d="M10.2 9.17c.12-.1.27-.16.41-.16h12.1c.26 0 .39.31.2.49l-2.3 2.3c-.1.1-.25.16-.4.16H8.1c-.26 0-.39-.31-.2-.49z"/><path d="M20.62 14.65c-.1-.1-.25-.16-.4-.16H8.1c-.26 0-.39.31-.2.49l2.3 2.3c.1.1.25.16.41.16h12.1c.26 0 .39-.31.2-.49z"/></g></svg>',
+    USDC: '<svg class="tok-logo" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#2775CA"/><path d="M16 8.5v15M19.4 11.6c-.7-1-1.9-1.7-3.4-1.7-2 0-3.4 1.1-3.4 2.7 0 1.7 1.5 2.3 3.4 2.7 1.9.4 3.4 1 3.4 2.7 0 1.6-1.4 2.7-3.4 2.7-1.5 0-2.7-.7-3.4-1.7" stroke="#fff" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>',
+    USDT: '<svg class="tok-logo" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#26A17B"/><path d="M9.5 11.2h13M16 11.5v11" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/><ellipse cx="16" cy="16.2" rx="4.6" ry="1.8" fill="none" stroke="#fff" stroke-width="1.5"/></svg>',
+    EUR: '<svg class="tok-logo" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#33475A"/><path d="M20 11.6c-.9-.9-2.1-1.4-3.4-1.4-2.8 0-4.9 2.6-4.9 5.8s2.1 5.8 4.9 5.8c1.3 0 2.5-.5 3.4-1.4M9.6 14.4h7M9.6 17.4h7" stroke="#fff" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>',
+    USD: '<svg class="tok-logo" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#33475A"/><path d="M16 8.5v15M19.4 11.6c-.7-1-1.9-1.7-3.4-1.7-2 0-3.4 1.1-3.4 2.7 0 1.7 1.5 2.3 3.4 2.7 1.9.4 3.4 1 3.4 2.7 0 1.6-1.4 2.7-3.4 2.7-1.5 0-2.7-.7-3.4-1.7" stroke="#fff" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>',
+    GBP: '<svg class="tok-logo" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#33475A"/><path d="M20 10.8c-.7-.7-1.7-1.1-2.7-1.1-1.9 0-3.3 1.4-3.3 3.3v9.3M11.4 16.2h6.4M10.5 22.3h9.6" stroke="#fff" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>',
+  };
+  const tokenLogo = (t) => TOKEN_ICONS[t] || "";
 
   /* -------- Mise à jour live d'un panneau (taux, total, solde) -------- */
   function refreshPanel(panel) {
@@ -438,7 +454,7 @@ dockTabs.forEach((tab) => {
         (t) =>
           '<button type="button" role="option" class="token-menu__item' +
           (t === current ? " is-selected" : "") +
-          '" data-token="' + t + '"><span>' + t + "</span>" +
+          '" data-token="' + t + '"><span class="tmi-left">' + tokenLogo(t) + "<span>" + t + "</span></span>" +
           '<svg class="tick" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
       )
       .join("");
@@ -457,6 +473,7 @@ dockTabs.forEach((tab) => {
         const t = item.dataset.token;
         btn.dataset.token = t;
         btn.querySelector(".token-select__name").textContent = t;
+        setSelectLogo(btn);
         // Si le solde change de token, on vide le montant pour éviter une valeur incohérente.
         panel.querySelector(".dock-card__amount").value = "";
         refreshPanel(panel);
@@ -464,7 +481,18 @@ dockTabs.forEach((tab) => {
       });
     });
   }
+  // Injecte / met à jour le logo de marque dans un bouton token-select.
+  function setSelectLogo(btn) {
+    let logo = btn.querySelector(".token-select__logo");
+    if (!logo) {
+      logo = document.createElement("span");
+      logo.className = "token-select__logo";
+      btn.insertBefore(logo, btn.firstChild);
+    }
+    logo.innerHTML = tokenLogo(btn.dataset.token);
+  }
   document.querySelectorAll(".token-select").forEach((btn) => {
+    setSelectLogo(btn);
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       const wasOpen = openMenuBtn === btn;
@@ -535,8 +563,37 @@ dockTabs.forEach((tab) => {
       }
       return;
     }
+    // Case à cocher « j'ai sauvegardé ma phrase » → active le bouton Continue.
+    const ack = e.target.closest("[data-ack]");
+    if (ack) {
+      ack.classList.toggle("is-on");
+      const cta = modalContent.querySelector('[data-modal-action="confirm"]');
+      if (cta) cta.classList.toggle("is-disabled", !ack.classList.contains("is-on"));
+      return;
+    }
+    // Choix du token à déposer / envoyer.
+    const dt = e.target.closest("[data-deptok]");
+    if (dt) {
+      dt.parentElement.querySelectorAll("[data-deptok]").forEach((o) => o.classList.remove("is-on"));
+      dt.classList.add("is-on");
+      return;
+    }
+    // Copie de l'adresse du wallet.
+    const cp = e.target.closest("[data-copy]");
+    if (cp) {
+      try { if (navigator.clipboard) navigator.clipboard.writeText(cp.dataset.copy); } catch (_) {}
+      cp.classList.add("is-copied");
+      setTimeout(() => cp.classList.remove("is-copied"), 1200);
+      return;
+    }
+    // Boutons de navigation entre vues wallet.
+    if (e.target.closest("[data-deposit]")) { openDeposit(); return; }
+    if (e.target.closest("[data-dashboard]")) { openDashboard(); return; }
+    if (e.target.closest("[data-wsend]")) { openWalletSend(); return; }
+    if (e.target.closest("[data-signup]")) { openSignup(); return; }
     const btn = e.target.closest("[data-modal-action]");
     if (!btn) return;
+    if (btn.classList.contains("is-disabled")) return; // CTA verrouillé (ex. ack requis)
     if (btn.dataset.modalAction === "cancel") closeModal();
     else if (btn.dataset.modalAction === "confirm" && confirmFn) confirmFn();
   });
@@ -741,29 +798,239 @@ dockTabs.forEach((tab) => {
     });
   });
 
-  /* -------- Boutons navbar : Open app / Sign up (auth anonyme) -------- */
-  function openAuth(mode) {
-    const isSignup = mode === "signup";
-    openModal(
-      head(ICONS.auth, isSignup ? "Create your account" : "Open your account", "No email, no KYC — just a handle.") +
-        '<div class="m-field"><label>' + (isSignup ? "Choose a handle" : "Your handle") + '</label><input class="m-input" placeholder="@yourhandle" autocomplete="off"></div>' +
-        '<div class="m-field"><label>Passphrase</label><input class="m-input" type="password" placeholder="••••••••" autocomplete="' + (isSignup ? "new-password" : "current-password") + '"></div>' +
-        '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-modal-action="confirm"><span class="btn__label">' +
-        (isSignup ? "Create account" : "Open app") + '</span><span class="btn__icon">' + ARROW + '</span></button></div>' +
-        privacyNote("Anonymous by design"),
-      () =>
-        runFlow(isSignup ? "Creating your account…" : "Opening your account…", () =>
-          successHead(isSignup ? "You're in" : "Welcome back", isSignup ? "Your private account is ready." : "Your private account is unlocked.") +
-          doneBtn(isSignup ? "Get started" : "Continue")
-        )
+  /* ============================================================
+     COFFRE LOCAL (localStorage) — "base de données" côté navigateur.
+     Vrai non-custodial : on génère les clés sur l'appareil, on n'enregistre
+     QUE des données publiques (handle, adresse, soldes). La phrase de
+     récupération n'est jamais stockée — montrée une seule fois à la création.
+     ============================================================ */
+  const VKEY = "umbra.vault.v1";
+  const vault = {
+    load() { try { return JSON.parse(localStorage.getItem(VKEY)) || null; } catch (_) { return null; } },
+    save(v) { try { localStorage.setItem(VKEY, JSON.stringify(v)); } catch (_) {} },
+    clear() { try { localStorage.removeItem(VKEY); } catch (_) {} },
+  };
+
+  // Petite liste de mots façon BIP39 pour une phrase crédible (démo).
+  const WORDS = ("anchor amber aurora birch bridge cipher cobalt comet cosmos cedar delta drift " +
+    "ember falcon fern frost gamma glacier harbor haven iris ivory jade kelp lunar maple meadow " +
+    "nebula nimbus onyx opal orbit pebble prism quartz quiver raven ripple saffron slate solar " +
+    "spruce timber topaz umbra vault velvet willow zephyr").split(" ");
+  const genMnemonic = (n) => Array.from({ length: n || 12 }, () => WORDS[Math.floor(Math.random() * WORDS.length)]).join(" ");
+  const genAddress = () => "0x" + rndHex(40);
+  const fmtAddr = (a) => a.slice(0, 6) + "…" + a.slice(-4);
+  const totalValue = (acct) => Object.keys(acct.balances || {}).reduce((s, t) => s + acct.balances[t] * (RATES[t] || 0), 0);
+  const shakeEl = (el) => { if (!el) return; el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); if (el.focus) el.focus(); };
+  const COPY = '<svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="11" height="11" rx="2.2" stroke="currentColor" stroke-width="1.6"/><path d="M5 15V6a2 2 0 0 1 2-2h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+
+  // Carte wallet réutilisable (création + dashboard).
+  function walletCardHTML(acct) {
+    return (
+      '<div class="w-card"><div class="w-card__top"><span class="w-card__brand">' + ICONS.wallet + " Wallet</span>" +
+      '<span class="w-badge">' + LOCK + "NON-CUSTODIAL</span></div>" +
+      '<button type="button" class="w-addr" data-copy="' + acct.address + '"><span>' + fmtAddr(acct.address) + "</span>" + COPY + "</button>" +
+      '<div class="w-card__bottom"><span>@' + acct.handle + "</span><span>" + fmtEUR(totalValue(acct)) + "</span></div></div>"
     );
   }
+
+  // Met à jour la navbar selon l'état du coffre.
+  function refreshAuthUI() {
+    const acct = vault.load();
+    const signup = document.querySelector('[data-auth="signup"] .btn__label');
+    if (signup) signup.textContent = acct ? "@" + acct.handle : "Sign up";
+  }
+
+  let pendingWallet = null; // wallet en cours de création (avant validation phrase)
+
+  /* -------- Sign up : création de wallet non-custodial (multi-étapes) -------- */
+  function openSignup() {
+    openModal(
+      head(ICONS.key, "Create your wallet", "Non-custodial — you hold the keys, we never see them.") +
+        '<div class="m-badge">' + LOCK + "<span>Self-custody · no email · no KYC</span></div>" +
+        '<div class="m-field"><label>Choose a handle</label><div class="m-inwrap"><span class="m-inprefix">@</span>' +
+        '<input class="m-input m-input--prefixed" id="su-handle" placeholder="yourhandle" autocomplete="off" autocapitalize="none"></div></div>' +
+        '<div class="m-field"><label>Set a passphrase</label><input class="m-input" id="su-pass" type="password" placeholder="••••••••" autocomplete="new-password"></div>' +
+        '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-modal-action="confirm"><span class="btn__label">Generate wallet</span><span class="btn__icon">' + ARROW + "</span></button></div>" +
+        privacyNote("Your keys are generated on your device"),
+      () => {
+        const hEl = document.getElementById("su-handle");
+        const pEl = document.getElementById("su-pass");
+        const raw = (hEl.value || "").trim().replace(/^@+/, "");
+        if (!raw) { shakeEl(hEl); return; }
+        if (!(pEl.value || "").trim()) { shakeEl(pEl); return; }
+        const handle = raw.toLowerCase().replace(/[^a-z0-9_-]/g, "") || "ghost-" + rndHex(4);
+        pendingWallet = { handle, address: genAddress(), mnemonic: genMnemonic(12) };
+        signupGenerating();
+      }
+    );
+  }
+  function signupGenerating() {
+    const steps = ["Generating your keys…", "Deriving your address…", "Encrypting locally…"];
+    let i = 0;
+    setModal(processing(steps[0], "Everything stays on your device."));
+    const adv = () => {
+      i++;
+      if (i < steps.length) { setModal(processing(steps[i], "Everything stays on your device.")); setTimeout(adv, 850); }
+      else setTimeout(signupRecovery, 600);
+    };
+    setTimeout(adv, 850);
+  }
+  function signupRecovery() {
+    const words = pendingWallet.mnemonic.split(" ");
+    const grid = '<div class="seed-grid">' + words.map((w, i) => '<span class="seed-word"><b>' + (i + 1) + "</b>" + w + "</span>").join("") + "</div>";
+    setModal(
+      head(ICONS.key, "Your recovery phrase", "Write these 12 words down. They're the only way to restore your wallet.") +
+        grid +
+        '<button type="button" class="m-ack" data-ack><span class="m-ack__box">' + CHECK + "</span>" +
+        "<span>I've saved my recovery phrase. I understand it's never stored on any server.</span></button>" +
+        '<div class="m-actions"><button type="button" class="m-cta btn btn--primary is-disabled" data-modal-action="confirm"><span class="btn__label">Continue</span><span class="btn__icon">' + ARROW + "</span></button></div>" +
+        privacyNote("Non-custodial — only you can recover these funds"),
+      () => {
+        const ack = modalContent.querySelector(".m-ack");
+        if (!ack || !ack.classList.contains("is-on")) { shakeEl(ack); return; }
+        signupFinalize();
+      }
+    );
+  }
+  function signupFinalize() {
+    const acct = { handle: pendingWallet.handle, address: pendingWallet.address, createdAt: Date.now(), balances: {}, txs: [] };
+    vault.save(acct);
+    pendingWallet = null;
+    refreshAuthUI();
+    setModal(
+      successHead("Wallet ready", "Your self-custody wallet is live. Add funds to get started.") +
+        walletCardHTML(acct) +
+        '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-deposit><span class="btn__label">Add funds</span><span class="btn__icon">' + ARROW + "</span></button>" +
+        '<button type="button" class="m-ghost" data-dashboard>View wallet</button></div>'
+    );
+  }
+
+  /* -------- Dashboard wallet -------- */
+  function openDashboard() {
+    const acct = vault.load();
+    if (!acct) { openSignup(); return; }
+    const toks = Object.keys(acct.balances).filter((t) => acct.balances[t] > 0);
+    const balList = toks.length
+      ? '<div class="w-bal">' + toks.map((t) =>
+          '<div class="w-bal__row"><span class="w-bal__tok">' + tokenLogo(t) + "<span>" + t + "</span></span>" +
+          '<span class="w-bal__amt">' + fmtNum(acct.balances[t]) + " <small>" + fmtEUR(acct.balances[t] * (RATES[t] || 0)) + "</small></span></div>"
+        ).join("") + "</div>"
+      : '<p class="w-empty">No funds yet — add some to get started.</p>';
+    openModal(
+      head(ICONS.wallet, "@" + acct.handle, "Self-custody wallet") +
+        '<button type="button" class="w-addr w-addr--solo" data-copy="' + acct.address + '"><span>' + fmtAddr(acct.address) + "</span>" + COPY + "</button>" +
+        '<div class="w-total"><span>Total balance</span><strong>' + fmtEUR(totalValue(acct)) + "</strong></div>" +
+        balList +
+        '<div class="m-actions m-actions--row"><button type="button" class="m-cta btn btn--primary" data-deposit><span class="btn__label">Add funds</span></button>' +
+        '<button type="button" class="m-cta m-cta--ghost" data-wsend><span class="btn__label">Send</span></button></div>' +
+        privacyNote("Only your device holds the keys to this wallet"),
+      null
+    );
+  }
+
+  /* -------- Dépôt : envoyer des fonds dans le wallet -------- */
+  function depTokChips(active) {
+    const toks = ["USDC", "USDT", "ETH", "BTC", "SOL"];
+    return '<div class="dep-toks">' + toks.map((t) =>
+      '<button type="button" class="dep-tok' + (t === active ? " is-on" : "") + '" data-deptok="' + t + '">' + tokenLogo(t) + "<span>" + t + "</span></button>"
+    ).join("") + "</div>";
+  }
+  function openDeposit() {
+    const acct = vault.load();
+    if (!acct) { openSignup(); return; }
+    openModal(
+      head(ICONS.deposit, "Add funds", "Send crypto into your self-custody wallet.") +
+        depTokChips("USDC") +
+        '<div class="m-field"><label>Amount</label><input class="m-input" id="dep-amt" inputmode="decimal" placeholder="0.00" autocomplete="off"></div>' +
+        '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-modal-action="confirm"><span class="btn__label">Deposit</span><span class="btn__icon">' + ARROW + "</span></button>" +
+        '<button type="button" class="m-ghost" data-modal-action="cancel">Cancel</button></div>' +
+        privacyNote("Funds land in your wallet — you keep the keys"),
+      () => {
+        const amtEl = document.getElementById("dep-amt");
+        const amt = parseFloat((amtEl.value || "").replace(/,/g, ""));
+        const sel = modalContent.querySelector(".dep-tok.is-on");
+        const t = sel ? sel.dataset.deptok : "USDC";
+        if (!(amt > 0)) { shakeEl(amtEl); return; }
+        runFlow("Receiving your deposit…", () => {
+          const a = vault.load();
+          a.balances[t] = (a.balances[t] || 0) + amt;
+          a.txs.unshift({ type: "deposit", token: t, amt, at: Date.now() });
+          vault.save(a);
+          refreshAuthUI();
+          return (
+            successHead("Funds received", fmtNum(amt) + " " + t + " is now in your self-custody wallet.") +
+            rows([["Deposited", fmtNum(amt) + " " + t], ["New balance", fmtNum(a.balances[t]) + " " + t]]) +
+            '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-dashboard><span class="btn__label">View wallet</span></button>' +
+            '<button type="button" class="m-ghost" data-close>Done</button></div>'
+          );
+        });
+      }
+    );
+  }
+
+  /* -------- Envoi depuis le wallet (signé par la clé locale) -------- */
+  function openWalletSend() {
+    const acct = vault.load();
+    if (!acct) { openSignup(); return; }
+    const toks = Object.keys(acct.balances).filter((t) => acct.balances[t] > 0);
+    if (!toks.length) { openDeposit(); return; }
+    openModal(
+      head(ICONS.send, "Send", "From your self-custody wallet — over a stealth address.") +
+        '<div class="dep-toks">' + toks.map((t, i) =>
+          '<button type="button" class="dep-tok' + (i === 0 ? " is-on" : "") + '" data-deptok="' + t + '">' + tokenLogo(t) + "<span>" + t + "</span></button>"
+        ).join("") + "</div>" +
+        '<div class="m-field"><label>Recipient</label><input class="m-input" id="ws-to" placeholder="Address or @handle" autocomplete="off"></div>' +
+        '<div class="m-field"><label>Amount</label><input class="m-input" id="ws-amt" inputmode="decimal" placeholder="0.00" autocomplete="off"></div>' +
+        '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-modal-action="confirm"><span class="btn__label">Send privately</span><span class="btn__icon">' + ARROW + "</span></button>" +
+        '<button type="button" class="m-ghost" data-modal-action="cancel">Cancel</button></div>',
+      () => {
+        const toEl = document.getElementById("ws-to");
+        const amtEl = document.getElementById("ws-amt");
+        const sel = modalContent.querySelector(".dep-tok.is-on");
+        const t = sel ? sel.dataset.deptok : toks[0];
+        const to = (toEl.value || "").trim();
+        const amt = parseFloat((amtEl.value || "").replace(/,/g, ""));
+        if (!to) { shakeEl(toEl); return; }
+        const a = vault.load();
+        if (!(amt > 0) || amt > (a.balances[t] || 0)) { shakeEl(amtEl); return; }
+        runSteps(["Signing with your key…", "Routing privately…"], () => {
+          a.balances[t] = a.balances[t] - amt;
+          a.txs.unshift({ type: "send", token: t, amt, to, at: Date.now() });
+          vault.save(a);
+          refreshAuthUI();
+          const short = to.length > 22 ? to.slice(0, 10) + "…" + to.slice(-6) : to;
+          return (
+            successHead("Sent", fmtNum(amt) + " " + t + " delivered to " + short + ".") +
+            rows([["Remaining", fmtNum(a.balances[t]) + " " + t]]) +
+            '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-dashboard><span class="btn__label">View wallet</span></button>' +
+            '<button type="button" class="m-ghost" data-close>Done</button></div>'
+          );
+        });
+      }
+    );
+  }
+
+  /* -------- "Open app" sans wallet → invite à en créer un -------- */
+  function openLogin() {
+    openModal(
+      head(ICONS.auth, "Open your wallet", "No wallet on this device yet.") +
+        '<p class="m-lead">Create a non-custodial wallet in seconds — no email, no KYC. Your keys never leave your device.</p>' +
+        '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-signup><span class="btn__label">Create a wallet</span><span class="btn__icon">' + ARROW + "</span></button>" +
+        '<button type="button" class="m-ghost" data-close>Cancel</button></div>',
+      null
+    );
+  }
+
+  /* -------- Boutons navbar : routent selon l'état du coffre -------- */
   document.querySelectorAll("[data-auth]").forEach((el) => {
     el.addEventListener("click", (e) => {
       e.preventDefault();
-      openAuth(el.dataset.auth);
+      const acct = vault.load();
+      if (el.dataset.auth === "signup") acct ? openDashboard() : openSignup();
+      else acct ? openDashboard() : openLogin();
     });
   });
+  refreshAuthUI();
 
   // expose pour le handler d'onglets (fermeture du menu token au switch)
   window.closeTokenMenu = closeTokenMenu;

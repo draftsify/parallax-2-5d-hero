@@ -364,7 +364,7 @@ input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
    ============================================================ */
 .dock-card__amount-row { position: relative; }
 
-.token-select.is-open svg { transform: rotate(180deg); }
+.token-select.is-open > svg { transform: rotate(180deg); }
 
 .token-menu {
   position: fixed; /* ancré en JS via getBoundingClientRect → échappe à tout
@@ -621,6 +621,226 @@ input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
 .m-input:focus { border-color: rgba(30, 155, 255, 0.6); box-shadow: 0 0 0 3px rgba(30, 155, 255, 0.16); }
 .m-input[readonly] { color: var(--brand-deep); cursor: default; }
 
+/* champ avec préfixe @ pour le handle */
+.m-inwrap { position: relative; display: flex; align-items: center; }
+.m-inprefix {
+  position: absolute;
+  left: 16px;
+  font-weight: 700;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+.m-input--prefixed { padding-left: 30px; }
+
+/* badge self-custody */
+.m-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 9px 14px;
+  border-radius: 12px;
+  background: rgba(30, 155, 255, 0.1);
+  color: var(--brand-deep);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.m-badge svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+/* paragraphe d'intro (login) */
+.m-lead { margin: 4px 0 18px; font-size: 14px; line-height: 1.5; color: var(--ink-2); text-align: center; }
+
+/* --- Phrase de récupération (12 mots) --- */
+.seed-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 4px 0 16px;
+}
+.seed-word {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 9px 10px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.seed-word b { font-size: 10px; font-weight: 700; color: var(--ink-3); width: 12px; flex-shrink: 0; }
+
+/* case à cocher « j'ai sauvegardé » */
+.m-ack {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  width: 100%;
+  text-align: left;
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  background: transparent;
+  padding: 4px 2px 2px;
+  margin-bottom: 14px;
+  font: inherit;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.m-ack__box {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  border: 1.5px solid rgba(31, 51, 66, 0.28);
+  background: rgba(255, 255, 255, 0.6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.m-ack__box svg { width: 14px; height: 14px; color: #fff; opacity: 0; transition: opacity 0.2s; }
+.m-ack.is-on .m-ack__box { background: var(--brand); border-color: var(--brand); }
+.m-ack.is-on .m-ack__box svg { opacity: 1; }
+
+/* CTA verrouillé tant qu'une condition n'est pas remplie */
+.m-cta.is-disabled { opacity: 0.45; pointer-events: none; filter: saturate(0.7); }
+
+/* --- Carte wallet (création + dashboard) --- */
+.w-card {
+  margin: 4px 0 2px;
+  padding: 18px;
+  border-radius: 18px;
+  color: #fff;
+  background: linear-gradient(135deg, #143047 0%, #0a6fe0 100%);
+  box-shadow: 0 16px 36px -18px rgba(10, 111, 224, 0.7);
+}
+.w-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.w-card__brand { display: inline-flex; align-items: center; gap: 7px; }
+.w-card__brand svg { width: 17px; height: 17px; }
+.w-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+.w-badge svg { width: 11px; height: 11px; }
+.w-card__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 22px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* chip adresse copiable */
+.w-addr {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font: 600 13px/1 ui-monospace, "SF Mono", Menlo, monospace;
+  position: relative;
+}
+.w-addr svg { width: 14px; height: 14px; opacity: 0.85; }
+.w-addr.is-copied::after {
+  content: "Copied";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.55);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-family: inherit;
+}
+/* version sur fond clair (dashboard) */
+.w-addr--solo {
+  margin: 2px auto 16px;
+  background: rgba(31, 51, 66, 0.07);
+  color: var(--ink-2);
+  display: flex;
+  width: fit-content;
+}
+
+/* total + liste des soldes */
+.w-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  margin-bottom: 12px;
+}
+.w-total span { font-size: 13px; font-weight: 600; color: var(--ink-3); }
+.w-total strong { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+.w-bal { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+.w-bal__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.34);
+}
+.w-bal__tok { display: inline-flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.w-bal__amt { font-size: 14px; font-weight: 600; color: var(--ink); }
+.w-bal__amt small { font-weight: 500; color: var(--ink-3); margin-left: 5px; }
+.w-empty { text-align: center; color: var(--ink-3); font-size: 13.5px; padding: 6px 0 10px; }
+
+/* actions en ligne (Add funds / Send) */
+.m-actions--row { flex-direction: row; }
+.m-actions--row .m-cta { flex: 1; }
+.m-cta--ghost {
+  background: rgba(31, 51, 66, 0.06) !important;
+  color: var(--brand-deep) !important;
+  box-shadow: none !important;
+}
+
+/* sélecteur de token pour dépôt / envoi */
+.dep-toks { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.dep-tok {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 13px 8px 9px;
+  border-radius: 999px;
+  appearance: none;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  background: rgba(255, 255, 255, 0.45);
+  color: var(--ink-2);
+  font: 600 13px/1 inherit;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.dep-tok .tok-logo { width: 20px; height: 20px; }
+.dep-tok:hover { background: rgba(255, 255, 255, 0.7); }
+.dep-tok.is-on { border-color: var(--brand); background: #fff; color: var(--brand-deep); }
+
 /* état traitement */
 .m-state { text-align: center; padding: 16px 0 6px; }
 .m-spin {
@@ -702,16 +922,28 @@ input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 4px 14px -8px rgba(31, 51, 66, 0.35);
 }
 
-.token-select svg {
+.token-select > svg {
   width: 14px;
   height: 14px;
   opacity: 0.7;
   transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.token-select:hover svg {
+.token-select:hover > svg {
   transform: translateY(1px); /* micro-clin d'œil sur le chevron */
 }
+
+/* logo de marque dans le bouton sélecteur */
+.token-select__logo {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.tok-logo { width: 18px; height: 18px; display: block; border-radius: 50%; }
+/* logo + nom dans une entrée du menu déroulant */
+.tmi-left { display: inline-flex; align-items: center; gap: 9px; }
+.tmi-left .tok-logo { width: 20px; height: 20px; }
 
 .dock-card__meta {
   display: flex;
