@@ -99,15 +99,48 @@ body {
 }
 .petal {
   position: absolute;
-  will-change: transform;
+  pointer-events: auto;     /* réactive le hover (le parent .petals est inerte) */
+  will-change: transform;   /* porte la parallaxe au scroll */
+  cursor: default;
+}
+.petal__inner {
+  display: block;
+  width: 100%;
+  will-change: transform, opacity; /* porte le flottement idle + le fondu */
 }
 .petal img {
   display: block;
   width: 100%;
   height: auto;
-  will-change: transform;
   /* ombre douce pour ancrer la fleur dans la lumière de la scène */
   filter: drop-shadow(0 6px 10px rgba(20, 45, 30, 0.14));
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.5s ease;
+  will-change: transform; /* porte uniquement le grossissement au hover */
+}
+.petal:hover img {
+  transform: scale(1.28);
+  filter: drop-shadow(0 10px 16px rgba(20, 45, 30, 0.22));
+}
+
+/* --- NUAGES (z-index 1, juste au-dessus du ciel, derrière tout le reste) --- */
+.clouds {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.cloud {
+  position: absolute;
+  will-change: transform; /* parallaxe au scroll */
+}
+.cloud img {
+  display: block;
+  width: 100%;
+  height: auto;
+  will-change: transform; /* dérive horizontale lente */
+  filter: drop-shadow(0 8px 18px rgba(80, 120, 150, 0.12));
 }
 
 /* ============================================================

@@ -187,6 +187,17 @@ mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
       0
     );
   });
+
+  // NUAGES : parallaxe verticale lente (fond, bougent peu).
+  gsap.utils.toArray(".cloud").forEach((c) => {
+    const depth = parseFloat(c.dataset.depth) || 1;
+    tl.fromTo(
+      c,
+      { y: 0 },
+      { y: () => (PETAL_DRIFT * 0.5 * PARALLAX_REF()) / depth, ease: "none" },
+      0
+    );
+  });
 });
 
 /* ============================================================
@@ -253,6 +264,17 @@ mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
       p,
       { y: 0 },
       { y: () => (PETAL_DRIFT * 0.6 * PARALLAX_REF()) / depth, ease: "none" },
+      0
+    );
+  });
+
+  // NUAGES : parallaxe encore plus discrète sur mobile.
+  gsap.utils.toArray(".cloud").forEach((c) => {
+    const depth = parseFloat(c.dataset.depth) || 1;
+    tlMobile.fromTo(
+      c,
+      { y: 0 },
+      { y: () => (PETAL_DRIFT * 0.3 * PARALLAX_REF()) / depth, ease: "none" },
       0
     );
   });
@@ -326,22 +348,62 @@ dockTabs.forEach((tab) => {
    ============================================================ */
 if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   gsap.utils.toArray(".petal").forEach((p, i) => {
-    const img = p.querySelector("img");
+    const inner = p.querySelector(".petal__inner");
     const depth = parseFloat(p.dataset.depth) || 1;
-    const amp = 8 + 12 / depth; // amplitude verticale (px)
-    const rot = 5 / depth; // rotation (deg)
+    const amp = 3 + 5 / depth; // amplitude très légère (px)
+    const rot = 3 / depth; // rotation discrète (deg)
+
+    // Flottement : oscillation douce de position + rotation (sur .petal__inner).
     gsap.fromTo(
-      img,
-      { y: -amp / 2, x: -amp * 0.3, rotation: -rot },
+      inner,
+      { y: -amp / 2, x: -amp * 0.25, rotation: -rot },
       {
         y: amp / 2,
-        x: amp * 0.3,
+        x: amp * 0.25,
         rotation: rot,
-        duration: 4 + (i % 5) * 0.7,
+        duration: 5 + (i % 5) * 0.8,
         ease: "sine.inOut",
         repeat: -1,
         yoyo: true,
-        delay: i * 0.35,
+        delay: i * 0.4,
+      }
+    );
+
+    // Fondu : respiration d'opacité, sur un rythme différent → effet organique.
+    gsap.fromTo(
+      inner,
+      { autoAlpha: 1 },
+      {
+        autoAlpha: 0.45,
+        duration: 3.5 + (i % 4) * 0.9,
+        ease: "sine.inOut",
+        repeat: -1,
+        yoyo: true,
+        delay: i * 0.6,
+      }
+    );
+  });
+}
+
+/* ============================================================
+   Nuages : dérive horizontale lente et continue (sur l'<img> intérieur),
+   indépendante de la parallaxe au scroll portée par le wrapper .cloud.
+   ============================================================ */
+if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  gsap.utils.toArray(".cloud").forEach((c, i) => {
+    const img = c.querySelector("img");
+    const depth = parseFloat(c.dataset.depth) || 1;
+    const dx = 34 / depth; // dérive horizontale (px) — les plus proches bougent plus
+    gsap.fromTo(
+      img,
+      { x: -dx / 2 },
+      {
+        x: dx / 2,
+        duration: 20 + i * 5,
+        ease: "sine.inOut",
+        repeat: -1,
+        yoyo: true,
+        delay: i * 1.5,
       }
     );
   });
