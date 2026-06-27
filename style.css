@@ -13,21 +13,39 @@ body {
   padding: 0;
 }
 
+html {
+  background: #cfe4f3;          /* couleur ciel : aucun blanc même en rebond/overscroll */
+  overscroll-behavior: none;    /* coupe le rubber-band (pas de bande blanche en fin de scroll) */
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   color: #1d1d1f;
   background: #cfe4f3; /* fallback proche du bas du ciel, évite tout flash blanc */
+  overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
 }
 
 /* ============================================================
-   HERO — section pinnée pendant l'animation
+   SCENE — piste de scroll. Sa hauteur = durée de l'animation.
+   Hauteur réglée en JS depuis PIN_DISTANCE (fallback ci-dessous).
+   Comme c'est le DERNIER élément, le scroll s'arrête exactement à
+   la fin de l'animation : aucun espace blanc, rien après.
+   ============================================================ */
+.scene {
+  position: relative;
+  height: 155vh; /* = 100vh (hero) + 55vh d'animation ; surchargé par le JS */
+}
+
+/* ============================================================
+   HERO — reste "collé" (sticky) à l'écran pendant l'animation
    ============================================================ */
 .hero {
-  position: relative;
+  position: sticky;
+  top: 0;
   height: 100vh;
   width: 100%;
-  overflow: hidden; /* masque les calques qui débordent (panneau bas, colline qui sort) */
+  overflow: hidden; /* masque les calques qui débordent (dock bas, colline) */
 }
 
 .hero__stage {

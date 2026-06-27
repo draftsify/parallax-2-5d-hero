@@ -61,6 +61,11 @@ const panel = "#product-panel";
    gsap.matchMedia() : 3 contextes (desktop / mobile / reduced-motion),
    chacun nettoyé automatiquement quand la media-query ne matche plus.
    ------------------------------------------------------------ */
+// Hauteur de la piste de scroll = (1 + PIN_DISTANCE) × viewport.
+// Une seule source de vérité : ajuste PIN_DISTANCE pour tout régler.
+const sceneEl = document.querySelector(".scene");
+if (sceneEl) sceneEl.style.height = (1 + PIN_DISTANCE) * 100 + "vh";
+
 const mm = gsap.matchMedia();
 
 /* ============================================================
@@ -71,13 +76,12 @@ mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
   const tl = gsap.timeline({
     defaults: { duration: 1 }, // durée "de référence" de la timeline
     scrollTrigger: {
-      trigger: "#hero",
-      start: "top top",
-      // pin court : l'animation se boucle en PIN_DISTANCE × viewport
-      end: () => "+=" + window.innerHeight * PIN_DISTANCE,
-      pin: true,
-      scrub: 0.8, // < lissage doux pour un rendu bien fluide
-      invalidateOnRefresh: true, // recalcule les valeurs () au resize
+      // pas de pin : le hero est "sticky" (CSS), donc aucun espace blanc.
+      trigger: ".scene",
+      start: "top top",       // début quand la scene touche le haut
+      end: "bottom bottom",   // fin exactement au bas de la scene (= fin du scroll)
+      scrub: 0.8,             // lissage doux = rendu bien fluide
+      invalidateOnRefresh: true,
       // markers: true, // ← décommente pour visualiser start/end en dev
     },
   });
@@ -141,11 +145,12 @@ mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
    ============================================================ */
 mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
   const tlMobile = gsap.timeline({
+    defaults: { duration: 1 },
     scrollTrigger: {
-      trigger: "#hero",
+      trigger: ".scene",
       start: "top top",
-      end: "bottom top",
-      scrub: 1,
+      end: "bottom bottom",
+      scrub: 0.8,
       invalidateOnRefresh: true,
     },
   });
@@ -153,24 +158,32 @@ mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
   // Ciel : très léger déplacement vers le bas.
   tlMobile.fromTo(
     sky,
-    { y: 0 },
-    { y: () => SKY_SPEED * 0.5 * PARALLAX_REF(), ease: "none" },
+    { y: 0, scale: 1 },
+    { y: () => SKY_SPEED * 0.6 * PARALLAX_REF(), scale: SKY_SCALE, ease: "none" },
     0
   );
 
-  // Colline : déplacement vers le bas un peu plus marqué (sans scale fort, mobile = sobre).
+  // Colline : descente sobre (mobile).
   tlMobile.fromTo(
     mountain,
-    { y: 0 },
-    { y: () => MOUNTAIN_SPEED * 0.5 * PARALLAX_REF(), ease: "none" },
+    { y: 0, scale: 1 },
+    { y: () => MOUNTAIN_SPEED * 0.8 * PARALLAX_REF(), scale: MOUNTAIN_SCALE, ease: "none" },
     0
   );
 
-  // Panneau : simple fade-in pendant la descente.
+  // Dock : remonte et se centre (comme sur desktop).
   tlMobile.fromTo(
     panel,
-    { opacity: 0, yPercent: 30 },
-    { opacity: 1, yPercent: 0, ease: "none" },
+    { yPercent: 100, opacity: 0 },
+    { yPercent: -50, opacity: 1, duration: DOCK_REVEAL, ease: "power2.out" },
+    0
+  );
+
+  // Titre : fondu + flou.
+  tlMobile.fromTo(
+    ".hero__title",
+    { opacity: 1, filter: "blur(0px)" },
+    { opacity: 0, filter: "blur(" + TITLE_BLUR + "px)", duration: TITLE_FADE, ease: "power1.in" },
     0
   );
 });

@@ -17,8 +17,11 @@
          mountain     → z-index 3  (premier plan, devant)
          title        → z-index 4  (texte toujours lisible)
        ============================================================ -->
-  <section class="hero" id="hero">
-    <div class="hero__stage">
+  <!-- .scene = piste de scroll ; .hero reste "sticky" pendant l'animation,
+       puis le document s'arrête net (aucun espace blanc après). -->
+  <div class="scene">
+    <section class="hero" id="hero">
+      <div class="hero__stage">
 
       <!-- CALQUE 1 : ciel (fond fixe / très lent) -->
       <img class="layer layer--sky" src="assets/img/sky.png" alt="" aria-hidden="true" />
@@ -82,8 +85,9 @@
         <p>Umbra is the privacy layer for money. Shield assets with zero fees.</p>
       </div>
 
-    </div>
-  </section>
+      </div>
+    </section>
+  </div>
 
   <!-- GSAP 3 + ScrollTrigger via CDN -->
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
