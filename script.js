@@ -661,6 +661,7 @@ dockTabs.forEach((tab) => {
     if (e.target.closest("[data-wsend]")) { openWalletSend(); return; }
     if (e.target.closest("[data-signup]")) { openSignup(); return; }
     if (e.target.closest("[data-getmember]")) { openMembershipPurchase(); return; }
+    if (e.target.closest("[data-logout]")) { openLogoutConfirm(); return; }
     if (e.target.closest("[data-cardcreate]")) { openCardCreate(); return; }
     const cardBtn = e.target.closest("[data-card]");
     if (cardBtn) { openCardView(cardBtn.dataset.card); return; }
@@ -1164,7 +1165,8 @@ dockTabs.forEach((tab) => {
             '<button type="button" class="dep-tok' + (i === 0 ? " is-on" : "") + '" data-net="' + n + '">' + tokenLogo(n) + "<span>" + NETWORKS[n].name + "</span></button>"
           ).join("") + "</div></div>" +
         '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-modal-action="confirm"><span class="btn__label">Generate wallet</span><span class="btn__icon">' + ARROW + "</span></button></div>" +
-        privacyNote("Your keys are generated on your device"),
+        privacyNote("Your keys are generated on your device") +
+        '<p class="m-altlink">Not ready to create a wallet? <a href="waitlist.html">Join the waitlist</a></p>',
       () => {
         const hEl = document.getElementById("su-handle");
         const pEl = document.getElementById("su-pass");
@@ -1309,8 +1311,23 @@ dockTabs.forEach((tab) => {
         section("Membership") + memberBlock +
         cardsBlock +
         section("Activity") + txBlock +
-        privacyNote("Only your device holds the keys to this wallet"),
+        privacyNote("Only your device holds the keys to this wallet") +
+        '<div class="m-signout"><button type="button" class="m-signout__btn" data-logout>' +
+          '<svg viewBox="0 0 24 24" fill="none"><path d="M15 12H4m0 0 3.4-3.4M4 12l3.4 3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 7.5v-2A1.5 1.5 0 0 1 11.5 4h6A1.5 1.5 0 0 1 19 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 10 18.5v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+          "<span>Log out</span></button></div>",
       null
+    );
+  }
+
+  /* -------- Déconnexion : oublie le wallet sur cet appareil (non-custodial,
+     restaurable via la phrase de récupération). Confirmation requise. -------- */
+  function openLogoutConfirm() {
+    openModal(
+      head(ICONS.key, "Log out?", "This device will forget your wallet. You can restore it later with your 12-word recovery phrase.") +
+        '<div class="m-badge">' + LOCK + "<span>Non-custodial — we never had your keys</span></div>" +
+        '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-modal-action="confirm"><span class="btn__label">Log out</span></button>' +
+        '<button type="button" class="m-ghost" data-modal-action="cancel">Stay signed in</button></div>',
+      () => { vault.clear(); refreshAuthUI(); closeModal(); }
     );
   }
 
