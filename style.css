@@ -359,17 +359,32 @@ body {
    Un seul est affiché à la fois ; le swap est un simple fondu (aucun
    déplacement), donc rien ne saute quand on change d'onglet. */
 .dock-body {
-  position: relative;
+  /* Tous les panneaux sont empilés dans une seule cellule grid → la boîte
+     prend la taille du plus grand et NE BOUGE JAMAIS pendant le swap.
+     On peut donc faire un vrai crossfade (les deux visibles un instant)
+     sans aucun saut de mise en page. */
+  display: grid;
 }
 
 .dock-panel {
-  display: none;
+  grid-area: 1 / 1; /* empilés au même endroit */
+  display: flex;
   flex-direction: column;
   gap: 14px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px) scale(0.992);
+  /* fondu d'entrée/sortie doux → plus aucune coupure "sèche" */
+  transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0.4s;
+  pointer-events: none;
 }
 
 .dock-panel.is-active {
-  display: flex;
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  pointer-events: auto;
 }
 
 /* Belle animation au changement d'onglet : les éléments du panneau

@@ -386,6 +386,56 @@ if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
 }
 
 /* ============================================================
+   FLOU DE MOUVEMENT AU SCROLL : un flou directionnel piloté par la
+   VITESSE de scroll est appliqué aux calques en mouvement (ciel, colline,
+   fleurs, nuages) — jamais au dock ni au texte (qui restent nets), et
+   jamais à .hero__stage (sinon le backdrop-filter du dock casserait).
+   Plus on scrolle vite, plus ça floute ; au repos, ça revient à net.
+   ============================================================ */
+if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  const blurTargets = gsap.utils.toArray([
+    ".layer--sky",
+    ".layer--mountain",
+    ".petals",
+    ".clouds",
+  ]);
+  const state = { blur: 0 };
+  const render = () => {
+    const f = state.blur > 0.06 ? "blur(" + state.blur.toFixed(2) + "px)" : "none";
+    for (const el of blurTargets) el.style.filter = f;
+  };
+  let resetTween;
+  ScrollTrigger.create({
+    trigger: ".scene",
+    start: "top top",
+    end: "bottom bottom",
+    onUpdate: (self) => {
+      // getVelocity() ≈ px/s ; on plafonne le flou à 6px pour rester lisible.
+      const target = Math.min(Math.abs(self.getVelocity()) / 460, 6);
+      if (target > state.blur) {
+        gsap.to(state, {
+          blur: target,
+          duration: 0.12,
+          ease: "power1.out",
+          overwrite: true,
+          onUpdate: render,
+        });
+      }
+      // À chaque frame on (re)programme le retour au net : dès que le scroll
+      // ralentit/s'arrête, ce tween reprend la main et résorbe le flou.
+      resetTween && resetTween.kill();
+      resetTween = gsap.to(state, {
+        blur: 0,
+        duration: 0.5,
+        ease: "power2.out",
+        delay: 0.05,
+        onUpdate: render,
+      });
+    },
+  });
+}
+
+/* ============================================================
    Nuages : dérive horizontale lente et continue (sur l'<img> intérieur),
    indépendante de la parallaxe au scroll portée par le wrapper .cloud.
    ============================================================ */
