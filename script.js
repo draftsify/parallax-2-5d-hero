@@ -31,11 +31,18 @@ const SKY_SPEED = 0.11;
 const SKY_SCALE = 1.04;
 
 /* --- COLLINE (premier plan) --- */
-// Vitesse de descente de la colline (× la référence). ~0.25x : elle descend
-// juste assez pour révéler le dock, tout en restant TRÈS visible.
-const MOUNTAIN_SPEED = 0.25;
+// Vitesse de descente de la colline (× la référence). ~0.32x : elle descend
+// juste assez pour révéler le dock centré, tout en restant TRÈS visible.
+const MOUNTAIN_SPEED = 0.32;
 // Scale final de la colline (léger, pour ne pas masquer le dock).
 const MOUNTAIN_SCALE = 1.05;
+
+/* --- TITRE (texte principal) --- */
+// Le titre se fond + se floute quand on scrolle. Fraction de l'animation
+// au bout de laquelle il a totalement disparu (0.6 = à 60 % du scroll).
+const TITLE_FADE = 0.6;
+// Flou max appliqué au titre quand il disparaît (px).
+const TITLE_BLUR = 10;
 
 /* --- PANNEAU PRODUIT (glass, au milieu) --- */
 // Translation verticale du panneau : de +100% (caché en bas, derrière la
@@ -109,6 +116,19 @@ mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
       opacity: 1,
       duration: DOCK_REVEAL,
       ease: "power2.out",
+    },
+    0
+  );
+
+  // TITRE : se fond + se floute progressivement quand on scrolle.
+  tl.fromTo(
+    ".hero__title",
+    { opacity: 1, filter: "blur(0px)" },
+    {
+      opacity: 0,
+      filter: "blur(" + TITLE_BLUR + "px)",
+      duration: TITLE_FADE,
+      ease: "power1.in",
     },
     0
   );
