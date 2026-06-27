@@ -580,6 +580,13 @@ dockTabs.forEach((tab) => {
       dt.classList.add("is-on");
       return;
     }
+    // Choix du réseau du wallet (sign up).
+    const nt = e.target.closest("[data-net]");
+    if (nt) {
+      nt.parentElement.querySelectorAll("[data-net]").forEach((o) => o.classList.remove("is-on"));
+      nt.classList.add("is-on");
+      return;
+    }
     // Copie de l'adresse du wallet.
     const cp = e.target.closest("[data-copy]");
     if (cp) {
@@ -999,6 +1006,7 @@ dockTabs.forEach((tab) => {
     if (!Array.isArray(a.txs)) a.txs = [];
     if (!Array.isArray(a.cards)) a.cards = [];
     if (typeof a.member !== "boolean") a.member = false;
+    if (!a.network || !NETWORKS[a.network]) a.network = "ETH"; // anciens comptes 0x… = ETH
     return a;
   }
   // Horodatage relatif compact pour l'historique.
@@ -1023,7 +1031,19 @@ dockTabs.forEach((tab) => {
     "nebula nimbus onyx opal orbit pebble prism quartz quiver raven ripple saffron slate solar " +
     "spruce timber topaz umbra vault velvet willow zephyr").split(" ");
   const genMnemonic = (n) => Array.from({ length: n || 12 }, () => WORDS[Math.floor(Math.random() * WORDS.length)]).join(" ");
-  const genAddress = () => "0x" + rndHex(40);
+  // Chaîne aléatoire dans un alphabet donné (pour les formats d'adresse).
+  const rndStr = (alpha, n) => Array.from({ length: n }, () => alpha[Math.floor(Math.random() * alpha.length)]).join("");
+  const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  const BECH = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+  // Réseaux proposés à la création : chacun a un nom, un token natif et un
+  // format d'adresse réaliste (généré sur l'appareil).
+  const NETWORKS = {
+    ETH: { name: "Ethereum", token: "ETH", gen: () => "0x" + rndHex(40) },
+    SOL: { name: "Solana", token: "SOL", gen: () => rndStr(B58, 44) },
+    BTC: { name: "Bitcoin", token: "BTC", gen: () => "bc1" + rndStr(BECH, 39) },
+  };
+  const netName = (n) => (NETWORKS[n] ? NETWORKS[n].name : "");
+  const genAddress = (n) => (NETWORKS[n] || NETWORKS.ETH).gen();
   const fmtAddr = (a) => a.slice(0, 6) + "…" + a.slice(-4);
   const totalValue = (acct) => Object.keys(acct.balances || {}).reduce((s, t) => s + acct.balances[t] * (RATES[t] || 0), 0);
   const shakeEl = (el) => { if (!el) return; el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); if (el.focus) el.focus(); };
@@ -1031,8 +1051,9 @@ dockTabs.forEach((tab) => {
 
   // Carte wallet réutilisable (création + dashboard).
   function walletCardHTML(acct) {
+    const net = acct.network && NETWORKS[acct.network] ? netName(acct.network) : "Wallet";
     return (
-      '<div class="w-card"><div class="w-card__top"><span class="w-card__brand">' + ICONS.wallet + " Wallet</span>" +
+      '<div class="w-card"><div class="w-card__top"><span class="w-card__brand">' + (acct.network ? tokenLogo(acct.network) : ICONS.wallet) + " " + net + "</span>" +
       '<span class="w-badge">' + LOCK + "NON-CUSTODIAL</span></div>" +
       '<button type="button" class="w-addr" data-copy="' + acct.address + '"><span>' + fmtAddr(acct.address) + "</span>" + COPY + "</button>" +
       '<div class="w-card__bottom"><span>@' + acct.handle + "</span><span>" + fmtEUR(totalValue(acct)) + "</span></div></div>"
@@ -1091,6 +1112,10 @@ dockTabs.forEach((tab) => {
         '<div class="m-field"><label>Choose a handle</label><div class="m-inwrap"><span class="m-inprefix">@</span>' +
         '<input class="m-input m-input--prefixed" id="su-handle" placeholder="yourhandle" autocomplete="off" autocapitalize="none"></div></div>' +
         '<div class="m-field"><label>Set a passphrase</label><input class="m-input" id="su-pass" type="password" placeholder="••••••••" autocomplete="new-password"></div>' +
+        '<div class="m-field"><label>Wallet network</label><div class="dep-toks">' +
+          ["ETH", "SOL", "BTC"].map((n, i) =>
+            '<button type="button" class="dep-tok' + (i === 0 ? " is-on" : "") + '" data-net="' + n + '">' + tokenLogo(n) + "<span>" + NETWORKS[n].name + "</span></button>"
+          ).join("") + "</div></div>" +
         '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-modal-action="confirm"><span class="btn__label">Generate wallet</span><span class="btn__icon">' + ARROW + "</span></button></div>" +
         privacyNote("Your keys are generated on your device"),
       () => {
@@ -1100,7 +1125,9 @@ dockTabs.forEach((tab) => {
         if (!raw) { shakeEl(hEl); return; }
         if (!(pEl.value || "").trim()) { shakeEl(pEl); return; }
         const handle = raw.toLowerCase().replace(/[^a-z0-9_-]/g, "") || "ghost-" + rndHex(4);
-        pendingWallet = { handle, address: genAddress(), mnemonic: genMnemonic(12) };
+        const netEl = modalContent.querySelector(".dep-tok.is-on[data-net]");
+        const network = netEl && NETWORKS[netEl.dataset.net] ? netEl.dataset.net : "ETH";
+        pendingWallet = { handle, network, address: genAddress(network), mnemonic: genMnemonic(12) };
         signupGenerating();
       }
     );
@@ -1134,7 +1161,7 @@ dockTabs.forEach((tab) => {
     );
   }
   function signupFinalize() {
-    const acct = { handle: pendingWallet.handle, address: pendingWallet.address, createdAt: Date.now(), balances: {}, txs: [] };
+    const acct = { handle: pendingWallet.handle, address: pendingWallet.address, network: pendingWallet.network, createdAt: Date.now(), balances: {}, txs: [], member: false, cards: [] };
     vault.save(acct);
     pendingWallet = null;
     refreshAuthUI();
@@ -1177,12 +1204,17 @@ dockTabs.forEach((tab) => {
     if (!acct) { openSignup(); return; }
 
     const toks = Object.keys(acct.balances).filter((t) => acct.balances[t] > 0);
-    const balList = toks.length
-      ? '<div class="w-bal">' + toks.map((t) =>
-          '<div class="w-bal__row"><span class="w-bal__tok">' + tokenLogo(t) + "<span>" + t + "</span></span>" +
-          '<span class="w-bal__amt">' + fmtNum(acct.balances[t]) + " <small>" + fmtEUR(acct.balances[t] * (RATES[t] || 0)) + "</small></span></div>"
-        ).join("") + "</div>"
-      : '<p class="w-empty">No funds yet — add some to get started.</p>';
+    // Carte de solde unifiée : total en haut, détail par token sous un séparateur.
+    const balanceCard =
+      '<div class="w-balance"><div class="w-balance__total"><span>Total balance</span><strong>' + fmtEUR(totalValue(acct)) + "</strong></div>" +
+      (toks.length
+        ? '<div class="w-balance__list">' + toks.map((t) =>
+            '<div class="w-tok"><span class="w-tok__id">' + tokenLogo(t) + "<span>" + t + "</span></span>" +
+            '<span class="w-tok__val"><strong>' + fmtNum(acct.balances[t]) + "</strong><small>" + fmtEUR(acct.balances[t] * (RATES[t] || 0)) + "</small></span></div>"
+          ).join("") + "</div>"
+        : '<p class="w-empty">No funds yet — add some to get started.</p>') +
+      "</div>";
+    const dashSub = (acct.network && NETWORKS[acct.network] ? netName(acct.network) + " · " : "") + "Self-custody" + (acct.member ? " · Member" : "");
 
     // Bloc membership : promo si non-membre, statut + bouton sinon.
     const memberBlock = acct.member
@@ -1210,10 +1242,9 @@ dockTabs.forEach((tab) => {
       : '<p class="w-empty">No activity yet.</p>';
 
     openModal(
-      head(ICONS.wallet, "@" + acct.handle, acct.member ? "Self-custody wallet · Member" : "Self-custody wallet") +
+      head(ICONS.wallet, "@" + acct.handle, dashSub) +
         '<button type="button" class="w-addr w-addr--solo" data-copy="' + acct.address + '"><span>' + fmtAddr(acct.address) + "</span>" + COPY + "</button>" +
-        '<div class="w-total"><span>Total balance</span><strong>' + fmtEUR(totalValue(acct)) + "</strong></div>" +
-        balList +
+        balanceCard +
         '<div class="m-actions m-actions--row"><button type="button" class="m-cta btn btn--primary" data-deposit><span class="btn__label">Add funds</span></button>' +
         '<button type="button" class="m-cta m-cta--ghost" data-wsend><span class="btn__label">Send</span></button></div>' +
         section("Membership") + memberBlock +
@@ -1232,11 +1263,11 @@ dockTabs.forEach((tab) => {
     ).join("") + "</div>";
   }
   function openDeposit() {
-    const acct = vault.load();
+    const acct = loadAcct();
     if (!acct) { openSignup(); return; }
     openModal(
       head(ICONS.deposit, "Add funds", "Send crypto into your self-custody wallet.") +
-        depTokChips("USDC") +
+        depTokChips(acct.network && NETWORKS[acct.network] ? acct.network : "USDC") +
         '<div class="m-field"><label>Amount</label><input class="m-input" id="dep-amt" inputmode="decimal" placeholder="0.00" autocomplete="off"></div>' +
         '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-modal-action="confirm"><span class="btn__label">Deposit</span><span class="btn__icon">' + ARROW + "</span></button>" +
         '<button type="button" class="m-ghost" data-modal-action="cancel">Cancel</button></div>' +

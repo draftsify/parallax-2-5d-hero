@@ -798,32 +798,35 @@ input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
   width: fit-content;
 }
 
-/* total + liste des soldes */
-.w-total {
+/* carte de solde unifiée : total + détail par token */
+.w-balance {
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  padding: 4px 16px;
+  margin-bottom: 14px;
+}
+.w-balance__total {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  padding: 14px 16px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  margin-bottom: 12px;
+  padding: 14px 0;
 }
-.w-total span { font-size: 13px; font-weight: 600; color: var(--ink-3); }
-.w-total strong { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
-.w-bal { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
-.w-bal__row {
+.w-balance__total span { font-size: 13px; font-weight: 600; color: var(--ink-3); }
+.w-balance__total strong { font-size: 26px; font-weight: 700; letter-spacing: -0.025em; color: var(--ink); }
+.w-balance__list { border-top: 1px solid rgba(31, 51, 66, 0.08); }
+.w-tok {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 11px 14px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.34);
+  padding: 12px 0;
 }
-.w-bal__tok { display: inline-flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; color: var(--ink); }
-.w-bal__amt { font-size: 14px; font-weight: 600; color: var(--ink); }
-.w-bal__amt small { font-weight: 500; color: var(--ink-3); margin-left: 5px; }
-.w-empty { text-align: center; color: var(--ink-3); font-size: 13.5px; padding: 6px 0 10px; }
+.w-tok + .w-tok { border-top: 1px solid rgba(31, 51, 66, 0.07); }
+.w-tok__id { display: inline-flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.w-tok__val { display: inline-flex; align-items: baseline; gap: 7px; }
+.w-tok__val strong { font-size: 14px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
+.w-tok__val small { font-size: 12px; font-weight: 500; color: var(--ink-3); }
+.w-empty { text-align: center; color: var(--ink-3); font-size: 13.5px; padding: 4px 0 14px; }
 
 /* actions en ligne (Add funds / Send) */
 .m-actions--row { flex-direction: row; }
