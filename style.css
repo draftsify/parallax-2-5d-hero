@@ -14,14 +14,14 @@ body {
 }
 
 html {
-  background: #cfe4f3;          /* couleur ciel : aucun blanc même en rebond/overscroll */
+  background: #bfe1f4;          /* couleur ciel (sky2) : aucun blanc même en rebond/overscroll */
   overscroll-behavior: none;    /* coupe le rubber-band (pas de bande blanche en fin de scroll) */
 }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  color: #1d1d1f;
-  background: #cfe4f3; /* fallback proche du bas du ciel, évite tout flash blanc */
+  color: var(--ink);
+  background: #bfe1f4; /* fallback proche du bas du ciel, évite tout flash blanc */
   overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
 }
@@ -91,12 +91,17 @@ body {
    Style "Apple liquid glass" : verre dépoli, reflets, bordures claires.
    ============================================================ */
 :root {
-  --brand: #00b3ff;
-  --brand-deep: #0a84ff;
-  --ink: #0c1b24;          /* texte principal */
-  --ink-2: #5a6b74;        /* texte secondaire */
-  --ink-3: #93a1a8;        /* texte tertiaire / placeholder */
+  /* ----------------------------------------------------------------
+     PALETTE UNIQUE — dérivée du ciel (sky2) : une seule famille bleue.
+     Accent "sky blue" Umbra, encres bleu-marine, verres blancs neutres.
+     ---------------------------------------------------------------- */
+  --brand: #1e9bff;        /* accent principal (bleu ciel Umbra) */
+  --brand-deep: #0a6fe0;   /* accent profond (boutons, états actifs) */
+  --ink: #0a2030;          /* texte principal — bleu-marine profond */
+  --ink-2: #41586a;        /* texte secondaire — bleu-gris */
+  --ink-3: #8197a8;        /* texte tertiaire / placeholder — bleu-gris clair */
   --glass-stroke: rgba(255, 255, 255, 0.55);
+  --sky-fallback: #bfe1f4; /* bleu bas du ciel : zéro flash blanc */
 }
 
 .glass-dock {
@@ -370,7 +375,7 @@ body {
 .nav__brand {
   display: inline-flex;
   align-items: center;
-  color: var(--brand);
+  color: #fff;            /* logo + wordmark Umbra en blanc */
   flex-shrink: 0;
 }
 
@@ -378,6 +383,8 @@ body {
   height: 24px;
   width: auto;
   display: block;
+  /* léger halo sombre pour garder le blanc lisible sur le verre clair */
+  filter: drop-shadow(0 1px 6px rgba(10, 32, 48, 0.28));
 }
 
 .nav__links {
