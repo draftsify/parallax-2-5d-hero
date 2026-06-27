@@ -41,10 +41,17 @@ const MOUNTAIN_SCALE = 1.05;
 
 /* --- TITRE (texte principal) --- */
 // Le titre se fond + se floute quand on scrolle. Fraction de l'animation
-// au bout de laquelle il a totalement disparu (0.6 = à 60 % du scroll).
-const TITLE_FADE = 0.6;
+// au bout de laquelle il a totalement disparu (0.42 = il s'efface tôt pour
+// laisser la place au texte explicatif qui prend le relais au-dessus du dock).
+const TITLE_FADE = 0.42;
 // Flou max appliqué au titre quand il disparaît (px).
 const TITLE_BLUR = 10;
+
+/* --- TEXTE EXPLICATIF (lead) au-dessus du dock --- */
+// Moment d'apparition (position sur la timeline) et durée du fondu.
+// Démarre juste après l'effacement du titre → relais propre, sans chevauchement.
+const LEAD_START = 0.44;
+const LEAD_REVEAL = 0.5;
 
 /* --- PANNEAU PRODUIT (glass, au milieu) --- */
 // Translation verticale du panneau : de +100% (caché en bas, derrière la
@@ -153,6 +160,15 @@ mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
     },
     0
   );
+
+  // TEXTE EXPLICATIF : prend le relais du titre, apparaît au-dessus du dock
+  // (léger fondu + montée douce ; il reste ensuite parfaitement immobile).
+  tl.fromTo(
+    ".hero__lead",
+    { opacity: 0, y: 18 },
+    { opacity: 1, y: 0, duration: LEAD_REVEAL, ease: "power2.out" },
+    LEAD_START
+  );
 });
 
 /* ============================================================
@@ -203,6 +219,14 @@ mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
     { opacity: 0, filter: "blur(" + TITLE_BLUR + "px)", duration: TITLE_FADE, ease: "power1.in" },
     0
   );
+
+  // Texte explicatif : prend le relais du titre au-dessus du dock.
+  tlMobile.fromTo(
+    ".hero__lead",
+    { opacity: 0, y: 18 },
+    { opacity: 1, y: 0, duration: LEAD_REVEAL, ease: "power2.out" },
+    LEAD_START
+  );
 });
 
 /* ============================================================
@@ -229,12 +253,19 @@ if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
 }
 
 /* ============================================================
-   Interactivité du dock : bascule l'onglet actif au clic.
+   Interactivité du dock : au clic sur un onglet, on active l'onglet
+   ET on affiche le panneau correspondant (data-tab ↔ data-panel).
+   Tous les panneaux ont la même structure → aucun saut de hauteur,
+   tout reste exactement en place ; seul le contenu change (fondu).
    ============================================================ */
 const dockTabs = document.querySelectorAll(".dock-tab");
+const dockPanels = document.querySelectorAll(".dock-panel");
 dockTabs.forEach((tab) => {
   tab.addEventListener("click", () => {
-    dockTabs.forEach((t) => t.classList.remove("is-active"));
-    tab.classList.add("is-active");
+    const target = tab.dataset.tab;
+    dockTabs.forEach((t) => t.classList.toggle("is-active", t === tab));
+    dockPanels.forEach((p) =>
+      p.classList.toggle("is-active", p.dataset.panel === target)
+    );
   });
 });

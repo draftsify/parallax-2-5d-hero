@@ -285,6 +285,30 @@ body {
   font-weight: 600;
 }
 
+/* --- CORPS / PANNEAUX D'ONGLET ---
+   Tous les panneaux partagent le même squelette → même hauteur.
+   Un seul est affiché à la fois ; le swap est un simple fondu (aucun
+   déplacement), donc rien ne saute quand on change d'onglet. */
+.dock-body {
+  position: relative;
+}
+
+.dock-panel {
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dock-panel.is-active {
+  display: flex;
+  animation: dockPanelIn 0.26s ease both; /* fondu doux, sans mouvement */
+}
+
+@keyframes dockPanelIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* --- CTA pleine largeur (hérite du look .btn--primary) --- */
 .dock-cta {
   width: 100%;
@@ -326,6 +350,43 @@ body {
 }
 
 /* ============================================================
+   TEXTE EXPLICATIF (lead) — apparaît au scroll, juste au-dessus
+   du dock. Révélé par GSAP (opacity 0 → 1) ; il prend le relais
+   du titre principal qui se fond.
+   ============================================================ */
+.hero__lead {
+  position: absolute;
+  top: 19%;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  text-align: center;
+  padding: 0 24px;
+  opacity: 0; /* caché au départ, révélé pendant le scroll */
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+
+.hero__lead h2 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.5rem, 3.2vw, 2.3rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: var(--ink);
+  text-shadow: 0 1px 18px rgba(255, 255, 255, 0.5);
+}
+
+.hero__lead p {
+  margin: 0 auto;
+  max-width: 480px;
+  font-size: clamp(0.92rem, 1.9vw, 1.05rem);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+/* ============================================================
    prefers-reduced-motion : on fige la première frame.
    (le JS ne crée aucune animation ; on assure ici l'état visuel
    final/initial propre = panneau caché derrière la colline.)
@@ -336,6 +397,8 @@ body {
     transform: translate(-50%, -50%);
     opacity: 1;
   }
+  .hero__lead { opacity: 1; }       /* texte explicatif visible d'emblée */
+  .hero__title { opacity: 0; }      /* on évite le doublon titre/lead */
   .nav__inner { opacity: 1 !important; transform: none !important; }
 }
 
