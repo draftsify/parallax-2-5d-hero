@@ -215,6 +215,20 @@ mm.add("(prefers-reduced-motion: reduce)", () => {
 });
 
 /* ============================================================
+   Intro navbar : la barre glass glisse + apparaît au chargement
+   (les enfants se posent en léger décalé). Désactivé si reduced-motion.
+   ============================================================ */
+if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
+  intro.from(".nav__inner", { y: -22, opacity: 0, duration: 0.8, delay: 0.1 });
+  intro.from(
+    ".nav__inner > *",
+    { y: -8, opacity: 0, duration: 0.6, stagger: 0.07 },
+    "-=0.45"
+  );
+}
+
+/* ============================================================
    Interactivité du dock : bascule l'onglet actif au clic.
    ============================================================ */
 const dockTabs = document.querySelectorAll(".dock-tab");
