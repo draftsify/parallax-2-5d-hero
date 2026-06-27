@@ -708,10 +708,15 @@ input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
      On peut donc faire un vrai crossfade (les deux visibles un instant)
      sans aucun saut de mise en page. */
   display: grid;
+  /* minmax(0, 1fr) : la piste peut rétrécir SOUS la taille min-content de
+     son contenu. Sans ça, les <input> imposent une largeur intrinsèque et
+     les panneaux débordent le dock vers la droite (effet « dédoublé »). */
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .dock-panel {
   grid-area: 1 / 1; /* empilés au même endroit */
+  min-width: 0; /* autorise le panneau à suivre la piste grid (anti-débordement) */
   display: flex;
   flex-direction: column;
   gap: 14px;
