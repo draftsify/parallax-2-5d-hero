@@ -1206,7 +1206,7 @@ input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
    ============================================================ */
 .hero__lead {
   position: absolute;
-  top: 19%;
+  top: 13%;
   left: 0;
   right: 0;
   z-index: 4;

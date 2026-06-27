@@ -364,7 +364,7 @@ dockTabs.forEach((tab) => {
     GBP: { sym: "£", rate: 0.86 },
   };
   const CKEY = "umbra.ccy";
-  let dispCcy = "EUR";
+  let dispCcy = "USD"; // devise d'affichage par défaut
   try { const s = localStorage.getItem(CKEY); if (s && CCY[s]) dispCcy = s; } catch (_) {}
   const setCcy = (c) => { if (!CCY[c]) return; dispCcy = c; try { localStorage.setItem(CKEY, c); } catch (_) {} };
 
