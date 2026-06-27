@@ -83,7 +83,21 @@ body {
   transform: translateX(-50%);
   transform-origin: 50% 100%; /* scale "caméra qui avance" depuis le bas */
   z-index: 3;
-  width: 120%;
+  width: 120%;            /* base (mobile) : dimensionnée en largeur */
+}
+
+/* Desktop : on dimensionne la colline en HAUTEUR de viewport, pas en largeur.
+   Sinon, sur un écran large et court (ex. 16:9 Windows), la hauteur — calculée
+   depuis la largeur — augmente et le sommet de la colline remonte dans le titre.
+   En vh, le sommet reste à une position CONSTANTE quel que soit le ratio.
+   min-width garantit la couverture latérale (pas de ciel visible sur les côtés). */
+@media (min-width: 768px) {
+  .layer--mountain {
+    width: auto;
+    height: 107vh;
+    min-width: 104%;
+    max-width: none;
+  }
 }
 
 /* --- FLEURS FLOTTANTES (z-index 3, devant la colline, derrière le texte) ---
