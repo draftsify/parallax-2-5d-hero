@@ -17,8 +17,10 @@ gsap.registerPlugin(ScrollTrigger);
 const PIN_DISTANCE = 0.55;
 
 // Le dock sort TÔT : il finit d'apparaître à cette fraction de l'animation.
-// 0.5 = dock entièrement révélé à mi-parcours (donc très rapidement).
-const DOCK_REVEAL = 0.5;
+// 0.6 = dock entièrement révélé un peu après la moitié (apparition douce).
+const DOCK_REVEAL = 0.6;
+// Flou initial du dock (px) qui se résorbe pendant l'apparition (effet "depuis le flou").
+const DOCK_BLUR = 16;
 
 // Unité de référence du parallax (en px). Les multiplicateurs de vitesse
 // ci-dessous sont appliqués à cette référence = 1 hauteur de viewport.
@@ -117,13 +119,24 @@ mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
     // x:0 / y:0 forcent GSAP à piloter le centrage en POURCENTAGE (xPercent/yPercent)
     // et non en pixels — sinon le translate(-50%,100%) du CSS laisse un résidu
     // qui bloque le dock trop bas.
-    { xPercent: -50, yPercent: 100, x: 0, y: 0, opacity: 0 },
+    // Apparition douce : remonte + fade + léger scale + flou qui se résorbe.
+    {
+      xPercent: -50,
+      yPercent: 100,
+      x: 0,
+      y: 0,
+      opacity: 0,
+      scale: 0.92,
+      filter: "blur(" + DOCK_BLUR + "px)",
+    },
     {
       xPercent: -50,
       yPercent: -50, // parfaitement centré dans le viewport
       opacity: 1,
+      scale: 1,
+      filter: "blur(0px)",
       duration: DOCK_REVEAL,
-      ease: "power2.out",
+      ease: "power3.out", // settle bien doux
     },
     0
   );
@@ -175,11 +188,11 @@ mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
     0
   );
 
-  // Dock : remonte et se centre (comme sur desktop).
+  // Dock : remonte, se centre, fade + scale + flou qui se résorbe (comme desktop).
   tlMobile.fromTo(
     panel,
-    { xPercent: -50, yPercent: 100, x: 0, y: 0, opacity: 0 },
-    { xPercent: -50, yPercent: -50, opacity: 1, duration: DOCK_REVEAL, ease: "power2.out" },
+    { xPercent: -50, yPercent: 100, x: 0, y: 0, opacity: 0, scale: 0.92, filter: "blur(" + DOCK_BLUR + "px)" },
+    { xPercent: -50, yPercent: -50, opacity: 1, scale: 1, filter: "blur(0px)", duration: DOCK_REVEAL, ease: "power3.out" },
     0
   );
 
