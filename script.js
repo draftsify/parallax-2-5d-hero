@@ -336,8 +336,371 @@ dockTabs.forEach((tab) => {
     dockPanels.forEach((p) =>
       p.classList.toggle("is-active", p.dataset.panel === target)
     );
+    if (window.closeTokenMenu) window.closeTokenMenu();
   });
 });
+
+/* ============================================================
+   DÉMO INTERACTIVE DU DOCK — 100% front, AUCUN backend.
+   Montant éditable, sélecteur de token, bouton Max, taux & total en
+   direct, destinataire éditable, puis CTA → modale récap → traitement
+   → succès. Rien n'est envoyé nulle part : tout est simulé côté client.
+   ============================================================ */
+(function dockDemo() {
+  // Taux indicatifs (EUR par unité) — purement décoratifs.
+  const RATES = { USDC: 0.93, USDT: 0.93, ETH: 2950, BTC: 58000, SOL: 135, EUR: 1, USD: 0.92, GBP: 1.17 };
+  // Soldes fictifs par token (pour "Max" et l'affichage Balance).
+  const BALANCES = { USDC: 24983.21, USDT: 12050, ETH: 8.42, BTC: 1.284, SOL: 96.5 };
+  // Jeux de tokens proposés selon le type de panneau.
+  const TOKEN_SETS = { crypto: ["USDC", "USDT", "ETH", "BTC", "SOL"], fiat: ["EUR", "USD", "GBP"] };
+
+  // --- Formatage ---
+  const fmtEUR = (n) => "€" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtNum = (n) => n.toLocaleString("en-US", { maximumFractionDigits: 6 });
+  const fmtRate = (t) => {
+    const r = RATES[t] || 1;
+    const d = r >= 100 ? 0 : 2;
+    return "≈ €" + r.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }) + " / " + t;
+  };
+  const parseAmt = (el) => {
+    const v = parseFloat((el && el.value ? el.value : "").replace(/,/g, "").trim());
+    return isFinite(v) && v > 0 ? v : 0;
+  };
+  const rndHex = (n) => Array.from({ length: n }, () => "0123456789abcdef"[Math.floor(Math.random() * 16)]).join("");
+
+  // --- Petits SVG inline réutilisés dans la modale ---
+  const ARROW = '<svg viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const CHECK = '<svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const LOCK = '<svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+  const ICONS = {
+    buy: '<svg viewBox="0 0 24 24" fill="none"><path d="M6 7h13l-1.4 8.4a2 2 0 0 1-2 1.6H9.3a2 2 0 0 1-2-1.6L5.5 5H3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="20" r="1.3" fill="currentColor"/><circle cx="17" cy="20" r="1.3" fill="currentColor"/></svg>',
+    sell: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21V5m0 0l-6 6m6-6l6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    send: '<svg viewBox="0 0 24 24" fill="none"><path d="M21 4L3 11l7 3 3 7 8-17z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    card: '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="13" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M3 10h18" stroke="currentColor" stroke-width="1.7"/></svg>',
+    auth: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M5 20a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  };
+
+  /* -------- Mise à jour live d'un panneau (taux, total, solde) -------- */
+  function refreshPanel(panel) {
+    if (!panel) return;
+    const action = panel.dataset.panel;
+    const token = panel.querySelector(".token-select").dataset.token;
+    const amt = parseAmt(panel.querySelector(".dock-card__amount"));
+    const rate = RATES[token] || 1;
+
+    const rateEl = panel.querySelector(".dock-card__rate");
+    if (rateEl) rateEl.textContent = fmtRate(token);
+
+    const feeEl = panel.querySelector(".dock-fee__val");
+    if (feeEl && (action === "buy" || action === "sell")) feeEl.textContent = fmtEUR(amt * rate);
+
+    const balEl = panel.querySelector(".dock-card__bal");
+    if (balEl && BALANCES[token] != null) balEl.textContent = fmtNum(BALANCES[token]);
+  }
+
+  /* -------- Saisie du montant -------- */
+  document.querySelectorAll(".dock-card__amount").forEach((input) => {
+    input.addEventListener("input", () => {
+      // On ne garde que chiffres + un séparateur décimal.
+      input.value = input.value.replace(/[^\d.,]/g, "");
+      refreshPanel(input.closest(".dock-panel"));
+    });
+  });
+
+  /* -------- Bouton Max -------- */
+  document.querySelectorAll(".max-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const panel = btn.closest(".dock-panel");
+      const token = panel.querySelector(".token-select").dataset.token;
+      const bal = BALANCES[token];
+      if (bal == null) return;
+      panel.querySelector(".dock-card__amount").value = fmtNum(bal);
+      refreshPanel(panel);
+    });
+  });
+
+  /* -------- Sélecteur de token (menu déroulant) -------- */
+  let openMenuBtn = null;
+  function closeTokenMenu() {
+    document.querySelectorAll(".token-menu").forEach((m) => m.remove());
+    if (openMenuBtn) openMenuBtn.classList.remove("is-open");
+    openMenuBtn = null;
+  }
+  function openTokenMenu(btn) {
+    const panel = btn.closest(".dock-panel");
+    const set = TOKEN_SETS[panel.dataset.tokens] || TOKEN_SETS.crypto;
+    const current = btn.dataset.token;
+    const menu = document.createElement("div");
+    menu.className = "token-menu";
+    menu.setAttribute("role", "listbox");
+    menu.innerHTML = set
+      .map(
+        (t) =>
+          '<button type="button" role="option" class="token-menu__item' +
+          (t === current ? " is-selected" : "") +
+          '" data-token="' + t + '"><span>' + t + "</span>" +
+          '<svg class="tick" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+      )
+      .join("");
+    // Ancré en position:fixed sur <body> → échappe au contexte d'empilement du
+    // dock (sinon il passe sous la ligne de frais / le CTA).
+    document.body.appendChild(menu);
+    const r = btn.getBoundingClientRect();
+    menu.style.top = r.bottom + 8 + "px";
+    menu.style.right = window.innerWidth - r.right + "px";
+    btn.classList.add("is-open");
+    openMenuBtn = btn;
+
+    menu.querySelectorAll(".token-menu__item").forEach((item) => {
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const t = item.dataset.token;
+        btn.dataset.token = t;
+        btn.querySelector(".token-select__name").textContent = t;
+        // Si le solde change de token, on vide le montant pour éviter une valeur incohérente.
+        panel.querySelector(".dock-card__amount").value = "";
+        refreshPanel(panel);
+        closeTokenMenu();
+      });
+    });
+  }
+  document.querySelectorAll(".token-select").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const wasOpen = openMenuBtn === btn;
+      closeTokenMenu();
+      if (!wasOpen) openTokenMenu(btn);
+    });
+  });
+  // clic ailleurs → ferme le menu
+  document.addEventListener("click", () => closeTokenMenu());
+  // scroll → ferme le menu (il est en position:fixed, il ne suivrait pas le dock)
+  window.addEventListener("scroll", () => closeTokenMenu(), { passive: true });
+
+  /* ============================================================
+     MODALE
+     ============================================================ */
+  const modal = document.getElementById("modal");
+  const modalContent = document.getElementById("modal-content");
+  let confirmFn = null; // action à exécuter au clic "Confirmer"
+
+  function openModal(html, onConfirm) {
+    confirmFn = onConfirm || null;
+    modalContent.innerHTML = html;
+    modal.hidden = false;
+    modal.classList.remove("is-closing");
+    document.documentElement.style.overflow = "hidden";
+    const focusable = modalContent.querySelector("input, button");
+    if (focusable && focusable.tagName === "INPUT") focusable.focus();
+  }
+  function setModal(html, onConfirm) {
+    confirmFn = onConfirm || null;
+    modalContent.innerHTML = html;
+  }
+  function closeModal() {
+    modal.classList.add("is-closing");
+    setTimeout(() => {
+      modal.hidden = true;
+      modal.classList.remove("is-closing");
+      modalContent.innerHTML = "";
+      document.documentElement.style.overflow = "";
+      confirmFn = null;
+    }, 240);
+  }
+  modal.addEventListener("click", (e) => {
+    if (e.target.closest("[data-close]")) closeModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !modal.hidden) closeModal();
+  });
+  modalContent.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-modal-action]");
+    if (!btn) return;
+    if (btn.dataset.modalAction === "cancel") closeModal();
+    else if (btn.dataset.modalAction === "confirm" && confirmFn) confirmFn();
+  });
+
+  // Briques de contenu
+  const head = (icon, title, sub) =>
+    '<div class="m-head"><div class="m-icon">' + icon + '</div><h3 class="m-title" id="modal-title">' +
+    title + '</h3><p class="m-sub">' + sub + "</p></div>";
+  const rows = (arr) =>
+    '<div class="m-rows">' +
+    arr.map((r) => '<div class="m-row' + (r[2] ? " m-row--total" : "") + '"><span class="m-row__k">' + r[0] + '</span><span class="m-row__v">' + r[1] + "</span></div>").join("") +
+    "</div>";
+  const confirmActions = (label) =>
+    '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-modal-action="confirm"><span class="btn__label">' +
+    label + '</span><span class="btn__icon">' + ARROW + '</span></button>' +
+    '<button type="button" class="m-ghost" data-modal-action="cancel">Cancel</button></div>';
+  const privacyNote = (txt) => '<p class="m-note">' + LOCK + "<span>" + txt + "</span></p>";
+  const processing = (label) =>
+    '<div class="m-state"><div class="m-spin"></div><p class="m-title" style="font-size:18px">' +
+    label + '</p><p class="m-sub">Routing through the privacy layer…</p></div>';
+  const successHead = (title, sub) =>
+    '<div class="m-state"><div class="m-check">' + CHECK + '</div><h3 class="m-title" id="modal-title">' +
+    title + '</h3><p class="m-sub">' + sub + "</p></div>";
+  const doneBtn = (label) => '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-close><span class="btn__label">' + (label || "Done") + '</span></button></div>';
+
+  // Lance traitement → succès après ~1.5 s
+  function runFlow(processingLabel, buildSuccess) {
+    setModal(processing(processingLabel));
+    setTimeout(() => setModal(buildSuccess()), 1500);
+  }
+
+  /* -------- Ouverture d'une transaction (buy / sell / send) -------- */
+  function openTransaction(action, panel) {
+    const token = panel.querySelector(".token-select").dataset.token;
+    const amtInput = panel.querySelector(".dock-card__amount");
+    const amt = parseAmt(amtInput);
+    const rate = RATES[token] || 1;
+
+    // Validation : montant requis.
+    if (amt <= 0) {
+      amtInput.classList.remove("shake");
+      void amtInput.offsetWidth; // reflow → rejoue l'animation
+      amtInput.classList.add("shake");
+      amtInput.focus();
+      return;
+    }
+    // Send : destinataire requis.
+    let recipient = "";
+    if (action === "send") {
+      const rEl = panel.querySelector(".dock-fee__input");
+      recipient = (rEl.value || "").trim();
+      if (!recipient) {
+        rEl.classList.remove("shake");
+        void rEl.offsetWidth;
+        rEl.classList.add("shake");
+        rEl.focus();
+        return;
+      }
+    }
+
+    const eur = amt * rate;
+    const ref = "PVX-" + rndHex(6).toUpperCase();
+
+    if (action === "buy") {
+      openModal(
+        head(ICONS.buy, "Review your purchase", "No KYC · settles instantly.") +
+          rows([
+            ["You buy", fmtNum(amt) + " " + token],
+            ["Rate", fmtRate(token).replace("≈ ", "")],
+            ["You pay", fmtEUR(eur), true],
+          ]) +
+          confirmActions("Confirm & Buy") +
+          privacyNote("End-to-end private — no identity check"),
+        () =>
+          runFlow("Buying privately…", () =>
+            successHead("Purchase complete", fmtNum(amt) + " " + token + " is now in your private balance.") +
+            rows([["Paid", fmtEUR(eur)], ["Reference", ref]]) +
+            doneBtn("Done")
+          )
+      );
+    } else if (action === "sell") {
+      openModal(
+        head(ICONS.sell, "Review your sale", "No KYC · paid out by SEPA.") +
+          rows([
+            ["You sell", fmtNum(amt) + " " + token],
+            ["Rate", fmtRate(token).replace("≈ ", "")],
+            ["You receive", fmtEUR(eur), true],
+          ]) +
+          confirmActions("Confirm & Sell") +
+          privacyNote("End-to-end private — no identity check"),
+        () =>
+          runFlow("Selling privately…", () =>
+            successHead("Sale complete", fmtEUR(eur) + " is on its way to your account.") +
+            rows([["Sold", fmtNum(amt) + " " + token], ["Reference", ref]]) +
+            doneBtn("Done")
+          )
+      );
+    } else if (action === "send") {
+      const short = recipient.length > 22 ? recipient.slice(0, 10) + "…" + recipient.slice(-6) : recipient;
+      openModal(
+        head(ICONS.send, "Review transfer", "Sent over a stealth address.") +
+          rows([
+            ["You send", fmtNum(amt) + " " + token],
+            ["To", short],
+            ["Network fee", fmtEUR(0)],
+          ]) +
+          confirmActions("Confirm & Send") +
+          privacyNote("Untraceable — no link to your wallet"),
+        () =>
+          runFlow("Sending privately…", () =>
+            successHead("Transfer sent", fmtNum(amt) + " " + token + " delivered to " + short + ".") +
+            rows([["Reference", ref]]) +
+            doneBtn("Done")
+          )
+      );
+    }
+  }
+
+  /* -------- Membership (carte anonyme, inscription) -------- */
+  function openMembership(panel) {
+    const amt = parseAmt(panel.querySelector(".dock-card__amount"));
+    const handle = "ghost-" + rndHex(4);
+    const topupRow = amt > 0 ? [["Initial top-up", fmtEUR(amt)]] : [];
+    openModal(
+      head(ICONS.card, "Become a member", "Anonymous card — no email, no KYC.") +
+        '<div class="m-field"><label>Your member handle</label><input class="m-input" value="@' + handle + '" readonly></div>' +
+        '<div class="m-field"><label>Set a passphrase</label><input class="m-input" type="password" placeholder="••••••••" autocomplete="new-password"></div>' +
+        rows([["Card", "Virtual + Physical"], ...topupRow, ["Due today", fmtEUR(0), true]]) +
+        confirmActions("Create membership") +
+        privacyNote("Your identity is never collected"),
+      () =>
+        runFlow("Creating your membership…", () => {
+          const num = "•••• •••• •••• " + (1000 + Math.floor(Math.random() * 9000));
+          return (
+            successHead("Welcome aboard", "Your anonymous card is ready to use.") +
+            '<div class="m-card"><div class="m-card__top"><span>PRIVATE</span>' + LOCK + '</div>' +
+            '<div class="m-card__num">' + num + '</div>' +
+            '<div class="m-card__bottom"><span>@' + handle + '</span><span>VIRTUAL</span></div></div>' +
+            doneBtn("Start spending")
+          );
+        })
+    );
+  }
+
+  /* -------- Branchement des CTA du dock -------- */
+  document.querySelectorAll(".dock-panel").forEach((panel) => {
+    const cta = panel.querySelector(".dock-cta");
+    if (!cta) return;
+    cta.addEventListener("click", () => {
+      const action = panel.dataset.panel;
+      if (action === "card") openMembership(panel);
+      else openTransaction(action, panel);
+    });
+  });
+
+  /* -------- Boutons navbar : Open app / Sign up (auth anonyme) -------- */
+  function openAuth(mode) {
+    const isSignup = mode === "signup";
+    openModal(
+      head(ICONS.auth, isSignup ? "Create your account" : "Open your account", "No email, no KYC — just a handle.") +
+        '<div class="m-field"><label>' + (isSignup ? "Choose a handle" : "Your handle") + '</label><input class="m-input" placeholder="@yourhandle" autocomplete="off"></div>' +
+        '<div class="m-field"><label>Passphrase</label><input class="m-input" type="password" placeholder="••••••••" autocomplete="' + (isSignup ? "new-password" : "current-password") + '"></div>' +
+        '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-modal-action="confirm"><span class="btn__label">' +
+        (isSignup ? "Create account" : "Open app") + '</span><span class="btn__icon">' + ARROW + '</span></button></div>' +
+        privacyNote("Anonymous by design"),
+      () =>
+        runFlow(isSignup ? "Creating your account…" : "Opening your account…", () =>
+          successHead(isSignup ? "You're in" : "Welcome back", isSignup ? "Your private account is ready." : "Your private account is unlocked.") +
+          doneBtn(isSignup ? "Get started" : "Continue")
+        )
+    );
+  }
+  document.querySelectorAll("[data-auth]").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      openAuth(el.dataset.auth);
+    });
+  });
+
+  // expose pour le handler d'onglets (fermeture du menu token au switch)
+  window.closeTokenMenu = closeTokenMenu;
+
+  // Init : valeurs cohérentes au chargement.
+  document.querySelectorAll(".dock-panel").forEach(refreshPanel);
+})();
 
 /* ============================================================
    Flottement idle continu des fleurs : oscillation douce + légère

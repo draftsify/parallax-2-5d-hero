@@ -37,8 +37,8 @@
       </nav>
 
       <div class="nav__actions">
-        <a class="btn btn--ghost" href="#">Open app</a>
-        <a class="btn btn--primary" href="#">
+        <a class="btn btn--ghost" href="#" data-auth="login">Open app</a>
+        <a class="btn btn--primary" href="#" data-auth="signup">
           <span class="btn__label">Sign up</span>
           <span class="btn__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -79,28 +79,31 @@
 
         <!-- CORPS : un panneau par onglet. Tous partagent EXACTEMENT le même
              squelette (card + ligne secondaire + CTA) → hauteur constante,
-             donc aucun décalage / saut de mise en page au changement d'onglet. -->
+             donc aucun décalage / saut de mise en page au changement d'onglet.
+             Champs interactifs (montant éditable, token, Max, destinataire) —
+             logique 100% front, sans backend (voir script.js). -->
         <div class="dock-body">
 
           <!-- ONRAMP (acheter, no-KYC) -->
-          <div class="dock-panel is-active" data-panel="buy">
+          <div class="dock-panel is-active" data-panel="buy" data-tokens="crypto">
             <div class="dock-card">
               <span class="dock-card__label">You Buy</span>
               <div class="dock-card__amount-row">
-                <span class="dock-card__amount">0</span>
-                <button type="button" class="token-select">USDC
+                <input class="dock-card__amount" type="text" inputmode="decimal" placeholder="0" aria-label="Amount to buy" />
+                <button type="button" class="token-select" data-token="USDC">
+                  <span class="token-select__name">USDC</span>
                   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 10l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
               </div>
               <div class="dock-card__meta">
                 <span class="left">
                   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 19V6.66c0-1 0-1.51.31-1.63.31-.13.67.23 1.4.94L19 8.21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 5v12.34c0 1.01 0 1.51-.31 1.64-.31.12-.67-.24-1.4-.95L5 15.79" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  €0.00
+                  <span class="dock-card__rate">≈ €0.93 / USDC</span>
                 </span>
                 <span class="right">No KYC<span class="dock-dot"></span>Instant</span>
               </div>
             </div>
-            <div class="dock-fee"><span>You Pay</span><span>€0.00<span class="dock-dot"></span>Card / SEPA</span></div>
+            <div class="dock-fee"><span>You Pay</span><span><span class="dock-fee__val">€0.00</span><span class="dock-dot"></span>Card / SEPA</span></div>
             <button type="button" class="dock-cta btn btn--primary">
               <span class="btn__label">Buy Privately</span>
               <span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -108,24 +111,25 @@
           </div>
 
           <!-- SELL (offramp, no-KYC) -->
-          <div class="dock-panel" data-panel="sell">
+          <div class="dock-panel" data-panel="sell" data-tokens="crypto">
             <div class="dock-card">
               <span class="dock-card__label">You Sell</span>
               <div class="dock-card__amount-row">
-                <span class="dock-card__amount">0</span>
-                <button type="button" class="token-select">BTC
+                <input class="dock-card__amount" type="text" inputmode="decimal" placeholder="0" aria-label="Amount to sell" />
+                <button type="button" class="token-select" data-token="BTC">
+                  <span class="token-select__name">BTC</span>
                   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 10l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
               </div>
               <div class="dock-card__meta">
                 <span class="left">
                   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 19V6.66c0-1 0-1.51.31-1.63.31-.13.67.23 1.4.94L19 8.21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 5v12.34c0 1.01 0 1.51-.31 1.64-.31.12-.67-.24-1.4-.95L5 15.79" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  0.00
+                  <span class="dock-card__rate">≈ €58,000 / BTC</span>
                 </span>
-                <span class="right">Balance: 1.284<span class="dock-dot"></span>Max</span>
+                <span class="right">Balance: <span class="dock-card__bal">1.284</span><span class="dock-dot"></span><button type="button" class="max-btn">Max</button></span>
               </div>
             </div>
-            <div class="dock-fee"><span>You Receive</span><span>€0.00<span class="dock-dot"></span>SEPA</span></div>
+            <div class="dock-fee"><span>You Receive</span><span><span class="dock-fee__val">€0.00</span><span class="dock-dot"></span>SEPA</span></div>
             <button type="button" class="dock-cta btn btn--primary">
               <span class="btn__label">Sell Privately</span>
               <span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -133,24 +137,25 @@
           </div>
 
           <!-- SEND (envois) -->
-          <div class="dock-panel" data-panel="send">
+          <div class="dock-panel" data-panel="send" data-tokens="crypto">
             <div class="dock-card">
               <span class="dock-card__label">You're Sending</span>
               <div class="dock-card__amount-row">
-                <span class="dock-card__amount">0</span>
-                <button type="button" class="token-select">USDC
+                <input class="dock-card__amount" type="text" inputmode="decimal" placeholder="0" aria-label="Amount to send" />
+                <button type="button" class="token-select" data-token="USDC">
+                  <span class="token-select__name">USDC</span>
                   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 10l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
               </div>
               <div class="dock-card__meta">
                 <span class="left">
                   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 19V6.66c0-1 0-1.51.31-1.63.31-.13.67.23 1.4.94L19 8.21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 5v12.34c0 1.01 0 1.51-.31 1.64-.31.12-.67-.24-1.4-.95L5 15.79" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  0.00
+                  <span class="dock-card__rate">≈ €0.93 / USDC</span>
                 </span>
-                <span class="right">Balance: 24,983.21<span class="dock-dot"></span>Max</span>
+                <span class="right">Balance: <span class="dock-card__bal">24,983.21</span><span class="dock-dot"></span><button type="button" class="max-btn">Max</button></span>
               </div>
             </div>
-            <div class="dock-fee"><span>Recipient</span><span>0x7f…3a2b</span></div>
+            <div class="dock-fee"><span>Recipient</span><input class="dock-fee__input" type="text" placeholder="Address or @handle" aria-label="Recipient" /></div>
             <button type="button" class="dock-cta btn btn--primary">
               <span class="btn__label">Send Privately</span>
               <span class="btn__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -158,12 +163,13 @@
           </div>
 
           <!-- MEMBERSHIP (carte anonyme, inscription requise) -->
-          <div class="dock-panel" data-panel="card">
+          <div class="dock-panel" data-panel="card" data-tokens="fiat">
             <div class="dock-card">
               <span class="dock-card__label">Anonymous Card</span>
               <div class="dock-card__amount-row">
-                <span class="dock-card__amount">€0</span>
-                <button type="button" class="token-select">EUR
+                <input class="dock-card__amount" type="text" inputmode="decimal" placeholder="0" aria-label="Top up amount" />
+                <button type="button" class="token-select" data-token="EUR">
+                  <span class="token-select__name">EUR</span>
                   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 10l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
               </div>
@@ -219,6 +225,21 @@
 
       </div>
     </section>
+  </div>
+
+  <!-- ============================================================
+       MODALE — overlay plein écran (récap → traitement → succès).
+       Hors de .hero__stage (pas de filtre/sticky parent) → glass net.
+       Contenu injecté par script.js selon l'action. Cachée par défaut.
+       ============================================================ -->
+  <div class="modal" id="modal" hidden>
+    <div class="modal__scrim" data-close></div>
+    <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button type="button" class="modal__close" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <div class="modal__content" id="modal-content"></div>
+    </div>
   </div>
 
   <!-- GSAP 3 + ScrollTrigger via CDN -->
