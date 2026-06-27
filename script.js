@@ -586,11 +586,33 @@ dockTabs.forEach((tab) => {
       setTimeout(() => cp.classList.remove("is-copied"), 1200);
       return;
     }
+    // Sélecteur de paiement membership (SEPA / wallet).
+    const mp = e.target.closest("[data-mpay]");
+    if (mp) {
+      mp.parentElement.querySelectorAll("[data-mpay]").forEach((o) => o.classList.remove("is-on"));
+      mp.classList.add("is-on");
+      return;
+    }
+    // Sélecteur de type de carte (one-time / classic) + libellé descriptif.
+    const ct = e.target.closest("[data-ctype]");
+    if (ct) {
+      ct.parentElement.querySelectorAll("[data-ctype]").forEach((o) => o.classList.remove("is-on"));
+      ct.classList.add("is-on");
+      const d = modalContent.querySelector("#ctype-detail span");
+      if (d) d.textContent = ct.dataset.ctype === "classic"
+        ? "Reusable · spend anywhere, multiple times"
+        : "Single-use · burned right after one payment";
+      return;
+    }
     // Boutons de navigation entre vues wallet.
     if (e.target.closest("[data-deposit]")) { openDeposit(); return; }
     if (e.target.closest("[data-dashboard]")) { openDashboard(); return; }
     if (e.target.closest("[data-wsend]")) { openWalletSend(); return; }
     if (e.target.closest("[data-signup]")) { openSignup(); return; }
+    if (e.target.closest("[data-getmember]")) { openMembershipPurchase(); return; }
+    if (e.target.closest("[data-cardcreate]")) { openCardCreate(); return; }
+    const cardBtn = e.target.closest("[data-card]");
+    if (cardBtn) { openCardView(cardBtn.dataset.card); return; }
     const btn = e.target.closest("[data-modal-action]");
     if (!btn) return;
     if (btn.classList.contains("is-disabled")) return; // CTA verrouillé (ex. ack requis)
@@ -696,7 +718,7 @@ dockTabs.forEach((tab) => {
 
     if (action === "buy") {
       openModal(
-        head(ICONS.buy, "Review your purchase", "No account, no KYC — pay and go.") +
+        head(ICONS.buy, "Review your purchase", "No KYC — settle by SEPA or one-time card.") +
           rows([
             ["You buy", fmtNum(amt) + " " + token],
             ["Rate", fmtRate(token).replace("≈ ", "")],
@@ -707,11 +729,21 @@ dockTabs.forEach((tab) => {
           privacyNote("End-to-end private — no identity check"),
         () => {
           const via = chosenPay();
-          runFlow("Buying privately…", () =>
-            successHead("Purchase complete", fmtNum(amt) + " " + token + " is now in your private balance.") +
-            rows([["Paid", fmtEUR(eur)], ["Via", via], ["Reference", ref]]) +
-            doneBtn("Done")
-          );
+          if (!gatePay(via)) return; // SEPA → compte requis ; carte one-time → membre requis
+          runFlow("Buying privately…", () => {
+            const a = loadAcct();
+            if (a) {
+              a.balances[token] = (a.balances[token] || 0) + amt;
+              a.txs.unshift({ type: "buy", token: token, amt: amt, eur: eur, via: via, at: Date.now() });
+              vault.save(a);
+              refreshAuthUI();
+            }
+            return (
+              successHead("Purchase complete", fmtNum(amt) + " " + token + " is now in your private wallet.") +
+              rows([["Paid", fmtEUR(eur)], ["Via", via], ["Reference", ref]]) +
+              (a ? walletDoneActions() : doneBtn("Done"))
+            );
+          });
         }
       );
     } else if (action === "sell") {
@@ -727,16 +759,24 @@ dockTabs.forEach((tab) => {
           privacyNote("Routed through a mixer — no link to you"),
         () => {
           const via = chosenPay();
-          runSteps(["Mixing through a CEX…", "Selling privately…"], () =>
-            successHead(
-              "Sale complete",
-              via === "One-time card"
-                ? fmtEUR(eur) + " loaded onto your one-time card."
-                : fmtEUR(eur) + " is on its way by SEPA."
-            ) +
-            rows([["Sold", fmtNum(amt) + " " + token], ["Payout", via], ["Reference", ref]]) +
-            doneBtn("Done")
-          );
+          if (!gatePay(via)) return;
+          runSteps(["Mixing through a CEX…", "Selling privately…"], () => {
+            const a = loadAcct();
+            if (a) {
+              a.txs.unshift({ type: "sell", token: token, amt: amt, eur: eur, via: via, at: Date.now() });
+              vault.save(a);
+            }
+            return (
+              successHead(
+                "Sale complete",
+                via === "One-time card"
+                  ? fmtEUR(eur) + " loaded onto your one-time card."
+                  : fmtEUR(eur) + " is on its way by SEPA."
+              ) +
+              rows([["Sold", fmtNum(amt) + " " + token], ["Payout", via], ["Reference", ref]]) +
+              (a ? walletDoneActions() : doneBtn("Done"))
+            );
+          });
         }
       );
     } else if (action === "send") {
@@ -760,30 +800,164 @@ dockTabs.forEach((tab) => {
     }
   }
 
-  /* -------- Membership (carte anonyme, inscription) -------- */
-  function openMembership(panel) {
-    const amt = parseAmt(panel.querySelector(".dock-card__amount"));
-    const handle = "ghost-" + rndHex(4);
-    const topupRow = amt > 0 ? [["Initial top-up", fmtEUR(amt)]] : [];
+  const MEMBER_PRICE = 9; // € / mois (démo)
+
+  /* -------- Gating des paiements --------
+     SEPA → un compte (wallet) suffit. Carte one-time → membership payant. */
+  function gatePay(via) {
+    const acct = loadAcct();
+    if (via === "One-time card") {
+      if (!acct) { gateNoAccount("card"); return false; }
+      if (!acct.member) { gateNoMember(); return false; }
+    } else {
+      if (!acct) { gateNoAccount("sepa"); return false; }
+    }
+    return true;
+  }
+  function gateNoAccount(reason) {
     openModal(
-      head(ICONS.card, "Become a member", "Mint one-time cards on demand — no email, no KYC.") +
-        '<div class="m-field"><label>Your member handle</label><input class="m-input" value="@' + handle + '" readonly></div>' +
-        '<div class="m-field"><label>Set a passphrase</label><input class="m-input" type="password" placeholder="••••••••" autocomplete="new-password"></div>' +
-        rows([["Cards", "Unlimited one-time"], ["Funding", "SEPA / crypto"], ...topupRow, ["Due today", fmtEUR(0), true]]) +
-        confirmActions("Create membership") +
-        privacyNote("Your identity is never collected"),
-      () =>
-        runFlow("Creating your membership…", () => {
-          const num = "•••• •••• •••• " + (1000 + Math.floor(Math.random() * 9000));
+      head(ICONS.key, "Create your account",
+        reason === "card"
+          ? "One-time cards need a membership account — start with a free wallet."
+          : "SEPA settlement needs a free account. No KYC, 20 seconds.") +
+        '<p class="m-lead">Spin up a non-custodial wallet — your keys stay on this device. Then finish your payment.</p>' +
+        '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-signup><span class="btn__label">Create wallet</span><span class="btn__icon">' + ARROW + '</span></button>' +
+        '<button type="button" class="m-ghost" data-close>Not now</button></div>',
+      null
+    );
+  }
+  function gateNoMember() {
+    openModal(
+      head(ICONS.card, "Membership required", "One-time cards are a member feature — " + fmtEUR(MEMBER_PRICE) + "/mo, no KYC.") +
+        '<p class="m-lead">Become a member to mint single-use cards. Your identity is never collected.</p>' +
+        '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-getmember><span class="btn__label">Get membership</span><span class="btn__icon">' + ARROW + '</span></button>' +
+        '<button type="button" class="m-ghost" data-close>Not now</button></div>',
+      null
+    );
+  }
+
+  /* -------- Membership payant -------- */
+  function openMembershipPurchase() {
+    const acct = loadAcct();
+    if (!acct) { gateNoAccount("card"); return; }
+    if (acct.member) { openCardCreate(); return; }
+    openModal(
+      head(ICONS.card, "Get Membership", "Mint unlimited one-time & classic cards — no KYC.") +
+        rows([
+          ["Plan", "Member · monthly"],
+          ["Cards", "One-time & classic"],
+          ["Privacy", "No identity, ever"],
+          ["Due today", fmtEUR(MEMBER_PRICE), true],
+        ]) +
+        '<div class="m-pay"><span class="m-pay__k">Pay with</span>' +
+        '<div class="m-seg" role="radiogroup" aria-label="Pay with">' +
+        '<button type="button" class="m-seg__opt is-on" data-mpay="sepa">SEPA</button>' +
+        '<button type="button" class="m-seg__opt" data-mpay="wallet">From wallet</button>' +
+        '</div></div>' +
+        confirmActions("Pay " + fmtEUR(MEMBER_PRICE)) +
+        privacyNote("Billed privately — your identity is never collected"),
+      () => {
+        const on = modalContent.querySelector(".m-seg__opt.is-on[data-mpay]");
+        const via = on ? on.dataset.mpay : "sepa";
+        const a0 = loadAcct();
+        if (via === "wallet" && totalValue(a0) < MEMBER_PRICE) {
+          // Pas assez de fonds → on invite à recharger.
+          openDeposit();
+          return;
+        }
+        runFlow("Activating membership…", () => {
+          const a = loadAcct();
+          a.member = true;
+          a.memberSince = Date.now();
+          a.txs.unshift({ type: "membership", via: via, at: Date.now() });
+          vault.save(a);
+          refreshAuthUI();
           return (
-            successHead("Welcome aboard", "Mint a fresh single-use card whenever you spend.") +
-            '<div class="m-card"><div class="m-card__top"><span>ONE-TIME</span>' + LOCK + '</div>' +
-            '<div class="m-card__num">' + num + '</div>' +
-            '<div class="m-card__bottom"><span>@' + handle + '</span><span>SINGLE-USE</span></div></div>' +
-            '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-newcard><span class="btn__label">Create one-time card</span><span class="btn__icon">' + ARROW + '</span></button>' +
-            '<button type="button" class="m-ghost" data-close>Done</button></div>'
+            successHead("You're a member", "Mint one-time or classic cards whenever you spend.") +
+            '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-cardcreate><span class="btn__label">Create a card</span><span class="btn__icon">' + ARROW + '</span></button>' +
+            '<button type="button" class="m-ghost" data-dashboard>Go to wallet</button></div>'
           );
-        })
+        });
+      }
+    );
+  }
+
+  /* -------- Génération + rendu d'une carte virtuelle -------- */
+  function genCard(type, load) {
+    const num = Array.from({ length: 4 }, () => 1000 + Math.floor(Math.random() * 9000)).join(" ");
+    const exp = String(1 + Math.floor(Math.random() * 12)).padStart(2, "0") + "/" + (28 + Math.floor(Math.random() * 4));
+    return {
+      id: "c_" + rndHex(8),
+      type: type,
+      num: num,
+      last4: num.slice(-4),
+      exp: exp,
+      cvv: String(100 + Math.floor(Math.random() * 900)),
+      load: load || 0,
+      createdAt: Date.now(),
+    };
+  }
+  function cardVisualHTML(card, handle) {
+    const isOne = card.type !== "classic";
+    return (
+      '<div class="m-card' + (isOne ? "" : " m-card--classic") + '">' +
+      '<div class="m-card__top"><span>' + (isOne ? "ONE-TIME" : "CLASSIC") + "</span>" + LOCK + "</div>" +
+      '<div class="m-card__num">' + card.num + "</div>" +
+      '<div class="m-card__grid"><span><small>EXP</small>' + card.exp + "</span><span><small>CVV</small>" + card.cvv + "</span></div>" +
+      '<div class="m-card__bottom"><span>@' + handle + "</span><span>" + (isOne ? "SINGLE-USE" : "REUSABLE") + "</span></div></div>"
+    );
+  }
+
+  /* -------- Création d'une carte (one-time / classic) -------- */
+  function openCardCreate() {
+    const acct = loadAcct();
+    if (!acct) { gateNoAccount("card"); return; }
+    if (!acct.member) { openMembershipPurchase(); return; }
+    openModal(
+      head(ICONS.card, "Create a card", "Generated on your device — carries nothing about you.") +
+        '<div class="m-pay"><span class="m-pay__k">Card type</span>' +
+        '<div class="m-seg" role="radiogroup" aria-label="Card type">' +
+        '<button type="button" class="m-seg__opt is-on" data-ctype="onetime">One-time</button>' +
+        '<button type="button" class="m-seg__opt" data-ctype="classic">Classic</button>' +
+        '</div></div>' +
+        '<p class="m-pay__detail" id="ctype-detail">' + LOCK + "<span>Single-use · burned right after one payment</span></p>" +
+        '<div class="m-field"><label>Load amount (optional)</label><input class="m-input" id="cc-amt" inputmode="decimal" placeholder="0.00" autocomplete="off"></div>' +
+        confirmActions("Generate card") +
+        privacyNote("No name, no KYC — nothing links the card to you"),
+      () => {
+        const on = modalContent.querySelector(".m-seg__opt.is-on[data-ctype]");
+        const type = on ? on.dataset.ctype : "onetime";
+        const load = parseFloat((document.getElementById("cc-amt").value || "").replace(/,/g, "")) || 0;
+        runFlow("Minting your card…", () => {
+          const a = loadAcct();
+          const card = genCard(type, load);
+          a.cards.unshift(card);
+          a.txs.unshift({ type: "card", kind: type, last4: card.last4, at: Date.now() });
+          vault.save(a);
+          return (
+            successHead("Card ready", type === "classic" ? "Your reusable card is live." : "Single-use card minted — burned after one payment.") +
+            cardVisualHTML(card, a.handle) +
+            '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-cardcreate><span class="btn__label">Create another</span><span class="btn__icon">' + ARROW + '</span></button>' +
+            '<button type="button" class="m-ghost" data-dashboard>Go to wallet</button></div>'
+          );
+        });
+      }
+    );
+  }
+
+  /* -------- Détail d'une carte existante -------- */
+  function openCardView(id) {
+    const acct = loadAcct();
+    if (!acct) return;
+    const card = acct.cards.find((c) => c.id === id);
+    if (!card) { openDashboard(); return; }
+    const extra = card.load ? [["Loaded", fmtEUR(card.load)]] : [];
+    openModal(
+      head(ICONS.card, card.type === "classic" ? "Classic card" : "One-time card", "Generated on your device — non-custodial.") +
+        cardVisualHTML(card, acct.handle) +
+        rows([["Type", card.type === "classic" ? "Reusable" : "Single-use"], ["Expires", card.exp], ["CVV", card.cvv], ...extra]) +
+        '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-dashboard><span class="btn__label">Back to wallet</span></button></div>',
+      null
     );
   }
 
@@ -793,8 +967,12 @@ dockTabs.forEach((tab) => {
     if (!cta) return;
     cta.addEventListener("click", () => {
       const action = panel.dataset.panel;
-      if (action === "card") openMembership(panel);
-      else openTransaction(action, panel);
+      if (action === "card") {
+        const acct = loadAcct();
+        if (!acct) openSignup();
+        else if (acct.member) openCardCreate();
+        else openMembershipPurchase();
+      } else openTransaction(action, panel);
     });
   });
 
@@ -810,6 +988,32 @@ dockTabs.forEach((tab) => {
     save(v) { try { localStorage.setItem(VKEY, JSON.stringify(v)); } catch (_) {} },
     clear() { try { localStorage.removeItem(VKEY); } catch (_) {} },
   };
+  // Charge le compte en garantissant la présence des champs (migration douce
+  // des anciens comptes : balances / txs / cards / member).
+  function loadAcct() {
+    const a = vault.load();
+    if (!a) return null;
+    if (!a.balances) a.balances = {};
+    if (!Array.isArray(a.txs)) a.txs = [];
+    if (!Array.isArray(a.cards)) a.cards = [];
+    if (typeof a.member !== "boolean") a.member = false;
+    return a;
+  }
+  // Horodatage relatif compact pour l'historique.
+  function timeAgo(t) {
+    if (!t) return "just now";
+    const s = Math.max(1, Math.floor((Date.now() - t) / 1000));
+    if (s < 60) return s + "s ago";
+    const m = Math.floor(s / 60);
+    if (m < 60) return m + "m ago";
+    const h = Math.floor(m / 60);
+    if (h < 24) return h + "h ago";
+    return Math.floor(h / 24) + "d ago";
+  }
+  // Actions de fin de flux quand un wallet existe (voir le wallet / terminer).
+  const walletDoneActions = () =>
+    '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-dashboard><span class="btn__label">View wallet</span></button>' +
+    '<button type="button" class="m-ghost" data-close>Done</button></div>';
 
   // Petite liste de mots façon BIP39 pour une phrase crédible (démo).
   const WORDS = ("anchor amber aurora birch bridge cipher cobalt comet cosmos cedar delta drift " +
@@ -898,17 +1102,43 @@ dockTabs.forEach((tab) => {
     pendingWallet = null;
     refreshAuthUI();
     setModal(
-      successHead("Wallet ready", "Your self-custody wallet is live. Add funds to get started.") +
+      successHead("Wallet ready", "Your self-custody wallet is live. Open it to add funds, get membership and mint cards.") +
         walletCardHTML(acct) +
-        '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-deposit><span class="btn__label">Add funds</span><span class="btn__icon">' + ARROW + "</span></button>" +
-        '<button type="button" class="m-ghost" data-dashboard>View wallet</button></div>'
+        '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-dashboard><span class="btn__label">Open my wallet</span><span class="btn__icon">' + ARROW + "</span></button>" +
+        '<button type="button" class="m-ghost" data-deposit>Add funds</button></div>'
     );
   }
 
-  /* -------- Dashboard wallet -------- */
+  // En-tête de section (avec lien d'action optionnel à droite).
+  const section = (label, action) =>
+    '<div class="w-section"><span>' + label + "</span>" + (action || "") + "</div>";
+
+  // Ligne d'historique pour une transaction.
+  function txLine(tx) {
+    const tk = tx.token || "";
+    const qty = tx.amt != null ? fmtNum(tx.amt) + " " + tk : "";
+    let m;
+    if (tx.type === "deposit") m = { ic: ICONS.deposit, label: "Received " + tk, amt: "+" + qty, cls: "pos" };
+    else if (tx.type === "send") m = { ic: ICONS.send, label: "Sent " + tk, amt: "−" + qty, cls: "neg" };
+    else if (tx.type === "buy") m = { ic: ICONS.buy, label: "Bought " + tk, amt: "+" + qty, cls: "pos" };
+    else if (tx.type === "sell") m = { ic: ICONS.sell, label: "Sold " + tk, amt: "−" + qty, cls: "neg" };
+    else if (tx.type === "card") m = { ic: ICONS.card, label: (tx.kind === "classic" ? "Classic" : "One-time") + " card created", amt: tx.last4 ? "•••• " + tx.last4 : "", cls: "" };
+    else if (tx.type === "membership") m = { ic: ICONS.card, label: "Membership activated", amt: fmtEUR(MEMBER_PRICE), cls: "" };
+    else m = { ic: ICONS.wallet, label: tx.type, amt: "", cls: "" };
+    const sub = timeAgo(tx.at) + (tx.to ? " · " + (tx.to.length > 16 ? tx.to.slice(0, 8) + "…" : tx.to) : "");
+    return (
+      '<div class="w-tx__row"><span class="w-tx__ico">' + m.ic + "</span>" +
+      '<span class="w-tx__main"><span class="w-tx__label">' + m.label + "</span>" +
+      '<span class="w-tx__sub">' + sub + "</span></span>" +
+      '<span class="w-tx__amt ' + m.cls + '">' + m.amt + "</span></div>"
+    );
+  }
+
+  /* -------- Dashboard wallet = page produit -------- */
   function openDashboard() {
-    const acct = vault.load();
+    const acct = loadAcct();
     if (!acct) { openSignup(); return; }
+
     const toks = Object.keys(acct.balances).filter((t) => acct.balances[t] > 0);
     const balList = toks.length
       ? '<div class="w-bal">' + toks.map((t) =>
@@ -916,13 +1146,42 @@ dockTabs.forEach((tab) => {
           '<span class="w-bal__amt">' + fmtNum(acct.balances[t]) + " <small>" + fmtEUR(acct.balances[t] * (RATES[t] || 0)) + "</small></span></div>"
         ).join("") + "</div>"
       : '<p class="w-empty">No funds yet — add some to get started.</p>';
+
+    // Bloc membership : promo si non-membre, statut + bouton sinon.
+    const memberBlock = acct.member
+      ? '<div class="w-member"><span class="w-member__pill">' + CHECK + "Member</span>" +
+        '<button type="button" class="w-link" data-cardcreate>New card +</button></div>'
+      : '<button type="button" class="w-promo" data-getmember>' +
+        '<span class="w-promo__ico">' + ICONS.card + "</span>" +
+        '<span class="w-promo__txt"><strong>Get Membership</strong><small>Mint one-time & classic cards · ' + fmtEUR(MEMBER_PRICE) + "/mo, no KYC</small></span>" +
+        '<span class="w-promo__arr">' + ARROW + "</span></button>";
+
+    // Cartes émises.
+    const cardsBlock = acct.cards.length
+      ? section("Your cards", '<button type="button" class="w-link" data-cardcreate>New +</button>') +
+        '<div class="w-cards">' + acct.cards.slice(0, 4).map((c) =>
+          '<button type="button" class="w-mini' + (c.type === "classic" ? " w-mini--classic" : "") + '" data-card="' + c.id + '">' +
+          '<span class="w-mini__type">' + (c.type === "classic" ? "CLASSIC" : "ONE-TIME") + "</span>" +
+          '<span class="w-mini__num">•••• ' + c.last4 + "</span>" +
+          '<span class="w-mini__exp">' + c.exp + "</span></button>"
+        ).join("") + "</div>"
+      : "";
+
+    // Activité récente.
+    const txBlock = acct.txs.length
+      ? '<div class="w-tx">' + acct.txs.slice(0, 8).map(txLine).join("") + "</div>"
+      : '<p class="w-empty">No activity yet.</p>';
+
     openModal(
-      head(ICONS.wallet, "@" + acct.handle, "Self-custody wallet") +
+      head(ICONS.wallet, "@" + acct.handle, acct.member ? "Self-custody wallet · Member" : "Self-custody wallet") +
         '<button type="button" class="w-addr w-addr--solo" data-copy="' + acct.address + '"><span>' + fmtAddr(acct.address) + "</span>" + COPY + "</button>" +
         '<div class="w-total"><span>Total balance</span><strong>' + fmtEUR(totalValue(acct)) + "</strong></div>" +
         balList +
         '<div class="m-actions m-actions--row"><button type="button" class="m-cta btn btn--primary" data-deposit><span class="btn__label">Add funds</span></button>' +
         '<button type="button" class="m-cta m-cta--ghost" data-wsend><span class="btn__label">Send</span></button></div>' +
+        section("Membership") + memberBlock +
+        cardsBlock +
+        section("Activity") + txBlock +
         privacyNote("Only your device holds the keys to this wallet"),
       null
     );
@@ -1037,6 +1296,33 @@ dockTabs.forEach((tab) => {
 
   // Init : valeurs cohérentes au chargement.
   document.querySelectorAll(".dock-panel").forEach(refreshPanel);
+
+  /* -------- Prix en direct (CoinGecko) --------
+     Remplace les taux de secours par de vrais prix EUR (BTC, ETH, SOL, USDC,
+     USDT) puis rafraîchit les panneaux. En cas d'échec réseau, on garde les
+     taux de secours — l'UI reste fonctionnelle. */
+  (function fetchLivePrices() {
+    const map = { bitcoin: "BTC", ethereum: "ETH", solana: "SOL", "usd-coin": "USDC", tether: "USDT" };
+    const url = "https://api.coingecko.com/api/v3/simple/price?ids=" + Object.keys(map).join(",") + "&vs_currencies=eur";
+    fetch(url)
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((d) => {
+        let any = false;
+        for (const id in map) {
+          const v = d && d[id] && d[id].eur;
+          if (typeof v === "number" && v > 0) { RATES[map[id]] = v; any = true; }
+        }
+        if (any) {
+          document.querySelectorAll(".dock-panel").forEach(refreshPanel);
+          // Si le dashboard est ouvert, on le rafraîchit pour répercuter les valeurs.
+          if (!modal.hidden && modalContent.querySelector(".w-total")) {
+            const a = loadAcct();
+            if (a) openDashboard();
+          }
+        }
+      })
+      .catch(() => {});
+  })();
 })();
 
 /* ============================================================

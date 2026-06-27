@@ -841,6 +841,79 @@ input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
 .dep-tok:hover { background: rgba(255, 255, 255, 0.7); }
 .dep-tok.is-on { border-color: var(--brand); background: #fff; color: var(--brand-deep); }
 
+/* ===== Page produit (dashboard) ===== */
+/* en-tête de section */
+.w-section { display: flex; align-items: center; justify-content: space-between; margin: 18px 2px 9px; }
+.w-section > span { font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.w-link { appearance: none; border: 0; background: none; cursor: pointer; font: 600 13px/1 inherit; color: var(--brand-deep); padding: 0; }
+.w-link:hover { text-decoration: underline; }
+
+/* promo membership (non-membre) */
+.w-promo {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  appearance: none; cursor: pointer; padding: 14px; border-radius: 16px;
+  border: 1px solid rgba(30, 155, 255, 0.28);
+  background: linear-gradient(135deg, rgba(76, 184, 245, 0.16), rgba(10, 111, 224, 0.12));
+  color: var(--ink); transition: border-color 0.2s, transform 0.12s;
+}
+.w-promo:hover { border-color: rgba(30, 155, 255, 0.55); }
+.w-promo:active { transform: scale(0.99); }
+.w-promo__ico {
+  width: 38px; height: 38px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 11px; background: rgba(255, 255, 255, 0.62); color: var(--brand-deep);
+}
+.w-promo__ico svg { width: 20px; height: 20px; }
+.w-promo__txt { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.w-promo__txt strong { font-size: 14.5px; font-weight: 700; }
+.w-promo__txt small { font-size: 12px; color: var(--ink-2); }
+.w-promo__arr { color: var(--brand-deep); flex-shrink: 0; }
+.w-promo__arr svg { width: 18px; height: 18px; }
+
+/* statut membre */
+.w-member {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; border-radius: 14px;
+  background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(255, 255, 255, 0.55);
+}
+.w-member__pill { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--brand-deep); }
+.w-member__pill svg { width: 15px; height: 15px; }
+
+/* mini-cartes émises */
+.w-cards { display: flex; flex-wrap: wrap; gap: 9px; }
+.w-mini {
+  flex: 1 1 calc(50% - 5px); min-width: 132px; text-align: left; appearance: none; border: 0; cursor: pointer;
+  padding: 12px 13px; border-radius: 13px; color: #fff; display: flex; flex-direction: column; gap: 6px;
+  background: linear-gradient(135deg, #143047, #0a6fe0);
+  box-shadow: 0 10px 22px -14px rgba(10, 111, 224, 0.7); transition: transform 0.12s;
+}
+.w-mini:hover { transform: translateY(-1px); }
+.w-mini--classic { background: linear-gradient(135deg, #2b2350, #7a4ff0); box-shadow: 0 10px 22px -14px rgba(122, 79, 240, 0.7); }
+.w-mini__type { font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; opacity: 0.85; }
+.w-mini__num { font: 600 14px/1 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 0.08em; }
+.w-mini__exp { font-size: 11px; opacity: 0.8; }
+
+/* historique des transactions */
+.w-tx { display: flex; flex-direction: column; gap: 4px; }
+.w-tx__row { display: flex; align-items: center; gap: 11px; padding: 9px 6px; border-radius: 11px; }
+.w-tx__row:hover { background: rgba(255, 255, 255, 0.34); }
+.w-tx__ico {
+  width: 32px; height: 32px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 9px; background: rgba(31, 51, 66, 0.07); color: var(--ink-2);
+}
+.w-tx__ico svg { width: 16px; height: 16px; }
+.w-tx__main { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.w-tx__label { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.w-tx__sub { font-size: 11.5px; color: var(--ink-3); }
+.w-tx__amt { font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.w-tx__amt.pos { color: #0a9e54; }
+.w-tx__amt.neg { color: var(--ink-2); }
+
+/* infos carte virtuelle (exp / cvv) */
+.m-card--classic { background: linear-gradient(135deg, #2b2350 0%, #7a4ff0 100%); box-shadow: 0 16px 36px -18px rgba(122, 79, 240, 0.7); }
+.m-card__grid { display: flex; gap: 26px; margin-top: 14px; }
+.m-card__grid span { display: flex; flex-direction: column; gap: 3px; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; }
+.m-card__grid small { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; opacity: 0.72; }
+
 /* état traitement */
 .m-state { text-align: center; padding: 16px 0 6px; }
 .m-spin {
