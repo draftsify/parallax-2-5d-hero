@@ -657,6 +657,21 @@ input.dock-card__amount::placeholder { color: var(--ink-3); opacity: 1; }
   color: var(--ink-3);
 }
 .m-pay__detail svg { width: 13px; height: 13px; flex-shrink: 0; }
+.m-pay__detail strong { font-weight: 700; color: var(--ink-2); }
+
+/* Paiement membership en crypto : label au-dessus, 3 segments pleine largeur. */
+.m-cypay { margin-top: 16px; }
+.m-cypay .m-pay__k { display: block; margin-bottom: 8px; }
+.m-seg--cy { display: flex; width: 100%; }
+.m-seg--cy .m-seg__opt {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 8px;
+}
+.m-seg--cy .tok-logo { width: 17px; height: 17px; flex-shrink: 0; }
 
 /* flash quand on régénère une carte one-time */
 .m-card__num.flash { animation: cardFlash 0.5s ease; }

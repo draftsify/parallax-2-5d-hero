@@ -637,11 +637,12 @@ dockTabs.forEach((tab) => {
       setTimeout(() => cp.classList.remove("is-copied"), 1200);
       return;
     }
-    // Sélecteur de paiement membership (SEPA / wallet).
+    // Sélecteur de crypto pour le membership (SOL / ETH / BTC).
     const mp = e.target.closest("[data-mpay]");
     if (mp) {
       mp.parentElement.querySelectorAll("[data-mpay]").forEach((o) => o.classList.remove("is-on"));
       mp.classList.add("is-on");
+      updateMemberPay(mp.dataset.mpay);
       return;
     }
     // Sélecteur de type de carte (one-time / classic) + libellé descriptif.
@@ -855,6 +856,20 @@ dockTabs.forEach((tab) => {
   const MEMBER_USD = 55; // $ / mois — ancré en USD, converti pour l'affichage
   // Prix membership en EUR interne (round-trip exact vers $55 en USD).
   const memberPriceEur = () => MEMBER_USD / (CCY.USD.rate || 1.09);
+  // Cryptos acceptées pour régler le membership.
+  const MEMBER_TOKENS = ["SOL", "ETH", "BTC"];
+  // Montant en crypto équivalent au prix membership (RATES[t] = valeur d'1 token en EUR).
+  const memberCrypto = (t) => memberPriceEur() / (RATES[t] || 1);
+  // Formatage crypto : plus de décimales pour les très petits montants (BTC).
+  const fmtCrypto = (n) => n.toLocaleString("en-US", { maximumFractionDigits: n < 0.01 ? 6 : 4 });
+  // Met à jour le montant crypto affiché + le libellé du bouton quand on change de token.
+  function updateMemberPay(token) {
+    const need = memberCrypto(token);
+    const amtEl = modalContent.querySelector("#mcy-amt");
+    if (amtEl) amtEl.textContent = "≈ " + fmtCrypto(need) + " " + token;
+    const lbl = modalContent.querySelector('[data-modal-action="confirm"] .btn__label');
+    if (lbl) lbl.textContent = "Pay " + fmtCrypto(need) + " " + token;
+  }
 
   /* -------- Gating des paiements --------
      SEPA → un compte (wallet) suffit. Carte one-time → membership payant. */
@@ -895,6 +910,7 @@ dockTabs.forEach((tab) => {
     const acct = loadAcct();
     if (!acct) { gateNoAccount("card"); return; }
     if (acct.member) { openCardCreate(); return; }
+    const tok0 = MEMBER_TOKENS[0];
     openModal(
       head(ICONS.card, "Get Membership", "Zero fees on every payment + unlimited cards. No KYC.") +
         rows([
@@ -904,31 +920,36 @@ dockTabs.forEach((tab) => {
           ["Privacy", "No identity, ever"],
           ["Due today", fmtMoney(memberPriceEur()), true],
         ]) +
-        '<div class="m-pay"><span class="m-pay__k">Pay with</span>' +
-        '<div class="m-seg" role="radiogroup" aria-label="Pay with">' +
-        '<button type="button" class="m-seg__opt is-on" data-mpay="sepa">SEPA</button>' +
-        '<button type="button" class="m-seg__opt" data-mpay="wallet">From wallet</button>' +
+        '<div class="m-cypay"><span class="m-pay__k">Pay with crypto</span>' +
+        '<div class="m-seg m-seg--cy" role="radiogroup" aria-label="Pay with crypto">' +
+        MEMBER_TOKENS.map((t, i) =>
+          '<button type="button" class="m-seg__opt' + (i === 0 ? " is-on" : "") + '" data-mpay="' + t + '">' +
+          tokenLogo(t) + "<span>" + t + "</span></button>").join("") +
         '</div></div>' +
-        confirmActions("Pay " + fmtMoney(memberPriceEur())) +
-        privacyNote("Billed privately — your identity is never collected"),
+        '<p class="m-pay__detail">' + LOCK + '<span><strong id="mcy-amt">≈ ' + fmtCrypto(memberCrypto(tok0)) + " " + tok0 + '</strong> · debited from your self-custody wallet</span></p>' +
+        confirmActions("Pay " + fmtCrypto(memberCrypto(tok0)) + " " + tok0) +
+        privacyNote("Settled on-chain — your identity is never collected"),
       () => {
         const on = modalContent.querySelector(".m-seg__opt.is-on[data-mpay]");
-        const via = on ? on.dataset.mpay : "sepa";
+        const token = on ? on.dataset.mpay : tok0;
+        const need = memberCrypto(token);
         const a0 = loadAcct();
-        if (via === "wallet" && totalValue(a0) < memberPriceEur()) {
-          // Pas assez de fonds → on invite à recharger.
+        const bal = a0 && a0.balances ? (a0.balances[token] || 0) : 0;
+        if (bal < need) {
+          // Pas assez de ce token → on invite à recharger.
           openDeposit();
           return;
         }
-        runFlow("Activating membership…", () => {
+        runFlow("Confirming on-chain payment…", () => {
           const a = loadAcct();
+          a.balances[token] = (a.balances[token] || 0) - need;
           a.member = true;
           a.memberSince = Date.now();
-          a.txs.unshift({ type: "membership", via: via, at: Date.now() });
+          a.txs.unshift({ type: "membership", via: token, token: token, amt: need, at: Date.now() });
           vault.save(a);
           refreshAuthUI();
           return (
-            successHead("You're a member", "Mint one-time or classic cards whenever you spend.") +
+            successHead("You're a member", "Paid " + fmtCrypto(need) + " " + token + ". Mint one-time or classic cards whenever you spend.") +
             '<div class="m-actions"><button type="button" class="m-cta btn btn--primary" data-cardcreate><span class="btn__label">Create a card</span><span class="btn__icon">' + ARROW + '</span></button>' +
             '<button type="button" class="m-ghost" data-dashboard>Go to wallet</button></div>'
           );
