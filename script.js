@@ -12,15 +12,15 @@ gsap.registerPlugin(ScrollTrigger);
    RÉGLAGES — ajuste librement ces valeurs.
    ------------------------------------------------------------ */
 
-// Durée du pinning, en multiple de la hauteur du viewport.
-// 0.55 = l'animation se termine très vite (~55vh de scroll seulement).
-const PIN_DISTANCE = 0.55;
+// Durée du scroll de l'animation, en multiple de la hauteur du viewport.
+// 0.85 = plus de course → apparition plus lente et progressive.
+const PIN_DISTANCE = 0.85;
 
-// Le dock sort TÔT : il finit d'apparaître à cette fraction de l'animation.
-// 0.6 = dock entièrement révélé un peu après la moitié (apparition douce).
-const DOCK_REVEAL = 0.6;
+// Fraction de l'animation sur laquelle le dock apparaît.
+// 0.92 = il se révèle sur presque tout le scroll → bien lent et étalé.
+const DOCK_REVEAL = 0.92;
 // Flou initial du dock (px) qui se résorbe pendant l'apparition (effet "depuis le flou").
-const DOCK_BLUR = 16;
+const DOCK_BLUR = 18;
 
 // Unité de référence du parallax (en px). Les multiplicateurs de vitesse
 // ci-dessous sont appliqués à cette référence = 1 hauteur de viewport.
@@ -82,7 +82,7 @@ mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
       trigger: ".scene",
       start: "top top",       // début quand la scene touche le haut
       end: "bottom bottom",   // fin exactement au bas de la scene (= fin du scroll)
-      scrub: 0.8,             // lissage doux = rendu bien fluide
+      scrub: 1,               // lissage plus marque = apparition bien smooth
       invalidateOnRefresh: true,
       // markers: true, // ← décommente pour visualiser start/end en dev
     },
@@ -112,8 +112,8 @@ mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
     0
   );
 
-  // DOCK : sort TÔT — durée courte (DOCK_REVEAL) + ease pour un settle fluide.
-  // Il est entièrement révélé bien avant la fin du pin.
+  // DOCK : apparition LENTE et étalée sur presque tout le scroll (DOCK_REVEAL),
+  // avec remontée + fade + scale + flou qui se résorbe progressivement.
   tl.fromTo(
     panel,
     // x:0 / y:0 forcent GSAP à piloter le centrage en POURCENTAGE (xPercent/yPercent)
@@ -136,7 +136,7 @@ mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
       scale: 1,
       filter: "blur(0px)",
       duration: DOCK_REVEAL,
-      ease: "power3.out", // settle bien doux
+      ease: "power2.out", // montee progressive et douce
     },
     0
   );
@@ -167,7 +167,7 @@ mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
       trigger: ".scene",
       start: "top top",
       end: "bottom bottom",
-      scrub: 0.8,
+      scrub: 1,
       invalidateOnRefresh: true,
     },
   });
@@ -192,7 +192,7 @@ mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
   tlMobile.fromTo(
     panel,
     { xPercent: -50, yPercent: 100, x: 0, y: 0, opacity: 0, scale: 0.92, filter: "blur(" + DOCK_BLUR + "px)" },
-    { xPercent: -50, yPercent: -50, opacity: 1, scale: 1, filter: "blur(0px)", duration: DOCK_REVEAL, ease: "power3.out" },
+    { xPercent: -50, yPercent: -50, opacity: 1, scale: 1, filter: "blur(0px)", duration: DOCK_REVEAL, ease: "power2.out" },
     0
   );
 
