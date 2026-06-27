@@ -13,24 +13,29 @@ gsap.registerPlugin(ScrollTrigger);
    ------------------------------------------------------------ */
 
 // Durée du pinning, en multiple de la hauteur du viewport.
-// 1.5 = l'utilisateur scrolle ~150vh sans que la section ne défile.
-const PIN_DISTANCE = 1.5;
+// 0.55 = l'animation se termine très vite (~55vh de scroll seulement).
+const PIN_DISTANCE = 0.55;
+
+// Le dock sort TÔT : il finit d'apparaître à cette fraction de l'animation.
+// 0.5 = dock entièrement révélé à mi-parcours (donc très rapidement).
+const DOCK_REVEAL = 0.5;
 
 // Unité de référence du parallax (en px). Les multiplicateurs de vitesse
 // ci-dessous sont appliqués à cette référence = 1 hauteur de viewport.
 const PARALLAX_REF = () => window.innerHeight;
 
 /* --- CIEL (calque de fond, très lent) --- */
-// Vitesse de translation verticale du ciel (× la référence). ~0.2x = lent.
-const SKY_SPEED = 0.2;
+// Vitesse de translation verticale du ciel (× la référence). ~0.11x = très lent.
+const SKY_SPEED = 0.11;
 // Scale final du ciel (effet d'éloignement subtil).
-const SKY_SCALE = 1.05;
+const SKY_SCALE = 1.04;
 
-/* --- COLLINE (premier plan, rapide) --- */
-// Vitesse de translation verticale de la colline (× la référence). ~0.9x = rapide.
-const MOUNTAIN_SPEED = 0.9;
-// Scale final de la colline (effet caméra qui avance vers la colline).
-const MOUNTAIN_SCALE = 1.3;
+/* --- COLLINE (premier plan) --- */
+// Vitesse de descente de la colline (× la référence). ~0.25x : elle descend
+// juste assez pour révéler le dock, tout en restant TRÈS visible.
+const MOUNTAIN_SPEED = 0.25;
+// Scale final de la colline (léger, pour ne pas masquer le dock).
+const MOUNTAIN_SCALE = 1.05;
 
 /* --- PANNEAU PRODUIT (glass, au milieu) --- */
 // Translation verticale du panneau : de +100% (caché en bas, derrière la
@@ -57,56 +62,53 @@ const mm = gsap.matchMedia();
    ============================================================ */
 mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
   const tl = gsap.timeline({
+    defaults: { duration: 1 }, // durée "de référence" de la timeline
     scrollTrigger: {
       trigger: "#hero",
       start: "top top",
-      // pin pendant PIN_DISTANCE × viewport
+      // pin court : l'animation se boucle en PIN_DISTANCE × viewport
       end: () => "+=" + window.innerHeight * PIN_DISTANCE,
       pin: true,
-      scrub: 1,
+      scrub: 0.8, // < lissage doux pour un rendu bien fluide
       invalidateOnRefresh: true, // recalcule les valeurs () au resize
       // markers: true, // ← décommente pour visualiser start/end en dev
     },
   });
 
-  // CIEL : translateY lent (vers le haut) + léger scale.
+  // CIEL : descend très lentement + léger scale (durée pleine = 1).
   tl.fromTo(
     sky,
     { y: 0, scale: 1 },
     {
-      // déplacement vertical du ciel = +(SKY_SPEED × référence) en px
-      // (positif = vers le BAS : on scrolle vers le bas → le ciel descend, lentement)
       y: () => SKY_SPEED * PARALLAX_REF(),
       scale: SKY_SCALE,
-      ease: "none",
-    },
-    0 // démarre à t=0 sur la timeline
-  );
-
-  // DOCK : remonte de bas (caché derrière la colline) jusqu'au centre + fade-in.
-  tl.fromTo(
-    panel,
-    { yPercent: 100, opacity: 0 },
-    {
-      // translateY de bas en haut (les % sont relatifs à la hauteur du dock)
-      // -50% => parfaitement centré dans le viewport en fin d'animation
-      yPercent: -50,
-      opacity: 1,
       ease: "none",
     },
     0
   );
 
-  // COLLINE : translateY rapide (vers le haut) + gros scale (caméra qui avance).
+  // COLLINE : descend juste assez pour révéler le dock (durée pleine = 1).
   tl.fromTo(
     mountain,
     { y: 0, scale: 1 },
     {
-      // déplacement vertical de la colline = +(MOUNTAIN_SPEED × référence) en px
-      // (positif = vers le BAS : on scrolle vers le bas → la colline descend, vite)
       y: () => MOUNTAIN_SPEED * PARALLAX_REF(),
       scale: MOUNTAIN_SCALE,
       ease: "none",
+    },
+    0
+  );
+
+  // DOCK : sort TÔT — durée courte (DOCK_REVEAL) + ease pour un settle fluide.
+  // Il est entièrement révélé bien avant la fin du pin.
+  tl.fromTo(
+    panel,
+    { yPercent: 100, opacity: 0 },
+    {
+      yPercent: -50, // centré dans le viewport (au-dessus des collines)
+      opacity: 1,
+      duration: DOCK_REVEAL,
+      ease: "power2.out",
     },
     0
   );

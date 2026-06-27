@@ -84,7 +84,7 @@ body {
 .glass-dock {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 44%;
   z-index: 2;
   width: min(440px, 90vw);
   /* point de départ : translaté vers le bas (caché derrière la colline) */
@@ -291,7 +291,7 @@ body {
    ============================================================ */
 .hero__title {
   position: absolute;
-  top: 12%;
+  top: 5%;
   left: 0;
   right: 0;
   z-index: 4;
@@ -302,9 +302,10 @@ body {
 
 .hero__title h1 {
   margin: 0 0 0.4rem;
-  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  font-size: clamp(1.9rem, 4.4vw, 3.3rem);
   font-weight: 800;
   letter-spacing: -0.02em;
+  line-height: 1.05;
   color: #fff;
   text-shadow: 0 2px 24px rgba(0, 0, 0, 0.25);
 }
